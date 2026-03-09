@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HealthGuard Brain — Caregiver Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e14;
+    --surface: #111820;
+    --border: #1e2a38;
+    --text: #c9d1d9;
+    --muted: #4a5568;
+    --accent: #00d4ff;
+    --green: #00ff88;
+    --yellow: #ffd60a;
+    --orange: #ff8c00;
+    --red: #ff3333;
+    --critical-glow: rgba(255, 51, 51, 0.15);
+    --font-mono: 'IBM Plex Mono', monospace;
+    --font-sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Scanline overlay for atmosphere ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    animation: pulse-border 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-border {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.3); }
+    50% { box-shadow: 0 0 0 6px rgba(0, 212, 255, 0); }
+  }
+
+  .logo-text {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.05em;
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .connection-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: background 0.3s;
+  }
+
+  .status-dot.connected {
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: blink 1.5s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .clock {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  /* ── Main layout ── */
+  main {
+    padding: 24px 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Patient Cards Grid ── */
+  .patients-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+
+  .patient-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .patient-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--green);
+    transition: background 0.3s;
+  }
+
+  .patient-card.warning::before { background: var(--yellow); }
+  .patient-card.high::before { background: var(--orange); }
+  .patient-card.critical::before { background: var(--red); }
+  .patient-card.critical {
+    border-color: rgba(255, 51, 51, 0.4);
+    box-shadow: 0 0 30px var(--critical-glow);
+    animation: critical-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes critical-pulse {
+    0%, 100% { box-shadow: 0 0 20px var(--critical-glow); }
+    50% { box-shadow: 0 0 40px rgba(255, 51, 51, 0.25); }
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .patient-info h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 4px;
+  }
+
+  .patient-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .risk-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    background: rgba(0, 255, 136, 0.1);
+    color: var(--green);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    transition: all 0.3s;
+  }
+
+  .risk-badge.MODERATE {
+    background: rgba(255, 214, 10, 0.1);
+    color: var(--yellow);
+    border-color: rgba(255, 214, 10, 0.3);
+  }
+
+  .risk-badge.HIGH {
+    background: rgba(255, 140, 0, 0.1);
+    color: var(--orange);
+    border-color: rgba(255, 140, 0, 0.3);
+  }
+
+  .risk-badge.CRITICAL {
+    background: rgba(255, 51, 51, 0.15);
+    color: var(--red);
+    border-color: rgba(255, 51, 51, 0.4);
+    animation: badge-flash 0.8s ease-in-out infinite;
+  }
+
+  @keyframes badge-flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  /* ── Vitals Grid ── */
+  .vitals-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .vital-item {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+
+  .vital-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .vital-value {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+    transition: color 0.3s;
+  }
+
+  .vital-value.danger { color: var(--red); }
+  .vital-value.warning { color: var(--yellow); }
+
+  .card-timestamp {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  /* ── Alert Feed ── */
+  .alerts-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .alerts-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .alerts-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .alert-count {
+    background: rgba(255, 51, 51, 0.15);
+    color: var(--red);
+    border: 1px solid rgba(255, 51, 51, 0.3);
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
+  .alerts-list {
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  .alerts-list::-webkit-scrollbar { width: 4px; }
+  .alerts-list::-webkit-scrollbar-track { background: var(--surface); }
+  .alerts-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .alert-item {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14px;
+    align-items: start;
+    animation: slide-in 0.3s ease-out;
+  }
+
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .alert-item:last-child { border-bottom: none; }
+
+  .alert-level-indicator {
+    width: 4px;
+    height: 100%;
+    border-radius: 2px;
+    min-height: 40px;
+    background: var(--red);
+    align-self: stretch;
+  }
+
+  .alert-level-indicator.HIGH { background: var(--orange); }
+  .alert-level-indicator.MODERATE { background: var(--yellow); }
+
+  .alert-body {}
+
+  .alert-patient {
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 3px;
+  }
+
+  .alert-summary {
+    font-size: 12px;
+    color: var(--text);
+    margin-bottom: 4px;
+    line-height: 1.5;
+  }
+
+  .alert-action {
+    font-size: 11px;
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+
+  .alert-time {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .empty-alerts {
+    padding: 40px;
+    text-align: center;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  /* ── No connection overlay ── */
+  .disconnected-banner {
+    display: none;
+    background: rgba(255, 51, 51, 0.1);
+    border: 1px solid rgba(255, 51, 51, 0.3);
+    border-radius: 8px;
+    padding: 12px 20px;
+    margin-bottom: 24px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--red);
+    text-align: center;
+  }
+
+  .disconnected-banner.show { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🧠</div>
+    <div>
+      <div class="logo-text">HealthGuard Brain</div>
+      <div class="logo-sub">Caregiver Dashboard</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="connection-status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Connecting...</span>
+    </div>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+</header>
+
+<main>
+
+  <div class="disconnected-banner" id="disconnectedBanner">
+    ⚠ Connection lost. Make sure the backend is running at localhost:8000. Retrying...
+  </div>
+
+  <div class="section-label">Live Patient Vitals</div>
+
+  <div class="patients-grid" id="patientsGrid">
+    <!-- Patient cards injected by JS -->
+  </div>
+
+  <div class="section-label">Alert Feed</div>
+
+  <div class="alerts-panel">
+    <div class="alerts-header">
+      <div class="alerts-title">⚡ Real-time Alerts</div>
+      <div class="alert-count" id="alertCount">0 alerts</div>
+    </div>
+    <div class="alerts-list" id="alertsList">
+      <div class="empty-alerts">No alerts yet — monitoring active patients...</div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ── Patient state — loaded dynamically from /patients ──
+let patients = {};
+let alertCount = 0;
+let ws = null;
+
+// ── Load patients from registry ──
+async function loadPatients() {
+  try {
+    const res = await fetch("http://localhost:8000/patients");
+    const list = await res.json();
+    list.forEach(p => {
+      if (!patients[p.id]) {
+        patients[p.id] = { name: p.name, age: p.age, condition: p.condition, ward: p.ward || "", vitals: null, riskLevel: "LOW", lastUpdate: null };
+      }
+    });
+    // Remove patients no longer in registry
+    const ids = new Set(list.map(p => p.id));
+    Object.keys(patients).forEach(id => { if (!ids.has(id)) delete patients[id]; });
+    renderPatients();
+  } catch (e) {
+    console.warn("Could not load patients:", e);
+  }
+}
+
+// ── Clock ──
+function updateClock() {
+  const now = new Date();
+  document.getElementById("clock").textContent = now.toLocaleTimeString();
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── Render patient cards ──
+function renderPatients() {
+  const grid = document.getElementById("patientsGrid");
+  grid.innerHTML = Object.entries(patients).map(([id, p]) => {
+    const v = p.vitals;
+    const riskClass = p.riskLevel === "CRITICAL" ? "critical" : p.riskLevel === "HIGH" ? "high" : p.riskLevel === "MODERATE" ? "warning" : "";
+    const ts = p.lastUpdate ? new Date(p.lastUpdate).toLocaleTimeString() : "Waiting...";
+
+    return `
+      <div class="patient-card ${riskClass}" id="card-${id}">
+        <div class="card-header">
+          <div class="patient-info">
+            <h3>${p.name}</h3>
+            <div class="patient-meta">${id} · Age ${p.age} · ${p.condition}${p.ward ? ' · ' + p.ward : ''}</div>
+          </div>
+          <div class="risk-badge ${p.riskLevel}">${p.riskLevel}</div>
+        </div>
+        <div class="vitals-grid">
+          <div class="vital-item">
+            <div class="vital-label">Heart Rate</div>
+            <div class="vital-value ${v && v.heart_rate_bpm > 130 ? 'danger' : v && v.heart_rate_bpm > 100 ? 'warning' : ''}">${v ? v.heart_rate_bpm + ' bpm' : '---'}</div>
+          </div>
+          <div class="vital-item">
+            <div class="vital-label">Blood Pressure</div>
+            <div class="vital-value">${v ? v.blood_pressure : '---'}</div>
+          </div>
+          <div class="vital-item">
+            <div class="vital-label">SpO2</div>
+            <div class="vital-value ${v && v.spo2_percent < 85 ? 'danger' : v && v.spo2_percent < 92 ? 'warning' : ''}">${v ? v.spo2_percent + '%' : '---'}</div>
+          </div>
+          <div class="vital-item">
+            <div class="vital-label">Glucose</div>
+            <div class="vital-value ${v && v.glucose_mg_dl < 50 ? 'danger' : ''}">${v ? v.glucose_mg_dl + ' mg/dL' : '---'}</div>
+          </div>
+          <div class="vital-item">
+            <div class="vital-label">Temperature</div>
+            <div class="vital-value ${v && v.temperature_f > 103 ? 'danger' : v && v.temperature_f > 100 ? 'warning' : ''}">${v ? v.temperature_f + '°F' : '---'}</div>
+          </div>
+          <div class="vital-item">
+            <div class="vital-label">Status</div>
+            <div class="vital-value" style="color: ${p.riskLevel === 'CRITICAL' ? 'var(--red)' : p.riskLevel === 'HIGH' ? 'var(--orange)' : 'var(--green)'}">${p.riskLevel}</div>
+          </div>
+        </div>
+        <div class="card-timestamp">Last update: ${ts}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Speak alert using browser TTS ──
+function speakAlert(data) {
+  if (!window.speechSynthesis) return;
+  const msg = `Alert for ${data.patient_name}. ${data.summary} ${data.recommended_action}`;
+  const utterance = new SpeechSynthesisUtterance(msg);
+  utterance.rate = 0.95;
+  utterance.pitch = 1.0;
+  window.speechSynthesis.cancel(); // stop any current speech
+  window.speechSynthesis.speak(utterance);
+}
+
+// ── Add alert to feed ──
+function addAlert(data) {
+  alertCount++;
+  document.getElementById("alertCount").textContent = `${alertCount} alert${alertCount > 1 ? 's' : ''}`;
+
+  const list = document.getElementById("alertsList");
+  const empty = list.querySelector(".empty-alerts");
+  if (empty) empty.remove();
+
+  const time = new Date(data.timestamp).toLocaleTimeString();
+  const item = document.createElement("div");
+  item.className = "alert-item";
+  item.innerHTML = `
+    <div class="alert-level-indicator ${data.risk_level}"></div>
+    <div class="alert-body">
+      <div class="alert-patient">${data.patient_name} · ${data.anomaly_type || data.risk_level}</div>
+      <div class="alert-summary">${data.summary}</div>
+      <div class="alert-action">→ ${data.recommended_action}</div>
+    </div>
+    <div class="alert-time">${time}</div>
+  `;
+  list.insertBefore(item, list.firstChild);
+}
+
+// ── WebSocket ──
+function connect() {
+  ws = new WebSocket("ws://localhost:8000/ws");
+
+  ws.onopen = () => {
+    document.getElementById("statusDot").className = "status-dot connected";
+    document.getElementById("statusText").textContent = "Live";
+    document.getElementById("disconnectedBanner").classList.remove("show");
+    renderPatients();
+  };
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+
+    if (data.type === "vital") {
+      if (!patients[data.patient_id]) return;
+      patients[data.patient_id].vitals = data.vitals;
+      patients[data.patient_id].lastUpdate = data.timestamp;
+      if (patients[data.patient_id].riskLevel !== "CRITICAL") {
+        patients[data.patient_id].riskLevel = "LOW";
+      }
+      renderPatients();
+    }
+
+    if (data.type === "alert") {
+      if (!patients[data.patient_id]) return;
+      patients[data.patient_id].riskLevel = data.risk_level;
+      patients[data.patient_id].lastUpdate = data.timestamp;
+      renderPatients();
+      addAlert(data);
+      speakAlert(data);
+    }
+  };
+
+  ws.onclose = () => {
+    document.getElementById("statusDot").className = "status-dot";
+    document.getElementById("statusText").textContent = "Disconnected";
+    document.getElementById("disconnectedBanner").classList.add("show");
+    setTimeout(connect, 3000);
+  };
+
+  ws.onerror = () => ws.close();
+}
+
+// ── Init ──
+loadPatients();
+setInterval(loadPatients, 10000); // Refresh registry every 10s
+connect();
+</script>
+</body>
+</html>

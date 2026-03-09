@@ -1,0 +1,32 @@
+[
+  {
+    "id": "P001",
+    "name": "Alice johnson",
+    "age": 67,
+    "condition": "Type 1 Diabetic",
+    "ward": "12",
+    "baselines": {
+      "heart_rate": 80,
+      "systolic_bp": 130,
+      "diastolic_bp": 85,
+      "spo2": 96.0,
+      "glucose": 110,
+      "temperature": 98.6
+    }
+  },
+  {
+    "id": "P002",
+    "name": "bob martinez",
+    "age": 54,
+    "condition": "Asthmatic",
+    "ward": "11",
+    "baselines": {
+      "heart_rate": 80,
+      "systolic_bp": 130,
+      "diastolic_bp": 85,
+      "spo2": 96.0,
+      "glucose": 110,
+      "temperature": 98.6
+    }
+  }
+]
