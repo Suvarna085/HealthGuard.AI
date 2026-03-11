@@ -28,5 +28,20 @@
       "glucose": 110,
       "temperature": 98.6
     }
+  },
+  {
+    "id": "P003",
+    "name": "Shivam smileface",
+    "age": 67,
+    "condition": "Post-Stroke",
+    "ward": "6767",
+    "baselines": {
+      "heart_rate": 80,
+      "systolic_bp": 130,
+      "diastolic_bp": 85,
+      "spo2": 96.0,
+      "glucose": 110,
+      "temperature": 98.6
+    }
   }
 ]
