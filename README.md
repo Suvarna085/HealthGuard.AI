@@ -1,116 +1,160 @@
 # HealthGuard
 
-HealthGuard is an AI-powered real-time health monitoring system designed for elderly patients. It simulates vital signs, analyzes anomalies using AI, and provides dashboards for patients and caregivers.
+HealthGuard is an AI-powered real-time health monitoring system designed for elderly patients. It simulates vital signs, detects anomalies using AI, and provides role-protected dashboards for patients and caregivers.
 
 The system uses **Kafka for data streaming**, **FastAPI for the backend**, and integrates with:
 
-- **Groq** for AI insights
-- **ElevenLabs** for voice alerts
-- **Datadog** for logging
+- **Groq (Llama 3.3-70B)** for AI risk analysis and voice Q&A
+- **ElevenLabs** for natural voice responses
+- **Datadog** for alert logging and observability
 
 ---
 
-# Features
+## Features
 
-## Patient Registration
-Register patients with details like:
-- Name
-- Age
-- Medical condition
-- Ward
+### Patient Registration
+Register patients with:
+- Name, age, medical condition, ward/room
+- Optional 4-digit PIN for patient login security
 
-## Vitals Simulation
-A dynamic simulator generates realistic vital signs including:
+### Vitals Simulation
+A dynamic simulator generates realistic vital signs per patient:
+- Heart Rate, Blood Pressure, SpO₂, Glucose, Temperature
 
-- Heart Rate
-- Blood Pressure
-- SpO₂
-- Glucose
-- Temperature
+Anomalies (Cardiac Event, Hypoglycemia, Respiratory Distress, Hypertensive Crisis, Fever Spike) are injected at a 3% rate to simulate real-world health risks.
 
-Occasional anomalies are injected to simulate real-world health risks.
+### Real-Time Monitoring
+Live updates via **WebSockets** stream vitals and AI alerts to dashboards instantly.
 
-## Real-Time Monitoring
-Live updates using **WebSockets** stream vitals and alerts to dashboards.
+### AI Risk Analysis
+Uses **Groq's Llama 3.3-70B** to:
+- Assess patient risk level (LOW / MODERATE / HIGH / CRITICAL)
+- Generate plain-English summaries for caregivers
+- Recommend immediate actions
 
-## AI Analysis
-Uses **Groq's Llama model** to:
-- Detect anomalies
-- Assess patient risk
-- Provide health recommendations
+### Voice Interaction
+Patients ask health questions by voice. The assistant:
+- Recognizes speech in 5 languages (English, Spanish, French, Hindi, Arabic)
+- Shows a live partial transcript while the patient is speaking
+- Retries automatically on silence
+- Responds with **ElevenLabs** voice synthesis (falls back to browser TTS)
 
-## Voice Interaction
-Patients can ask health questions using voice.
+### Multilingual Support
+The patient interface supports:
 
-Responses are spoken using **ElevenLabs voice synthesis**.
+| Language | Code | Flag |
+|----------|------|------|
+| English  | en-US | 🇺🇸 |
+| Spanish  | es-ES | 🇪🇸 |
+| French   | fr-FR | 🇫🇷 |
+| Hindi    | hi-IN | 🇮🇳 |
+| Arabic   | ar-SA | 🇸🇦 |
 
-## Caregiver Dashboard
-A dark-themed dashboard for caregivers that shows:
+All UI text, voice recognition, and AI responses adapt to the selected language. Arabic switches the layout to RTL.
 
-- All patient vitals
-- Real-time alerts
-- Patient status monitoring
+### Personalized AI Responses
+The AI assistant is personalized per patient:
+- Addresses the patient by first name
+- Knows their age and medical condition
+- Remembers the last 3 questions asked in the session for conversational context
 
-## Patient Interface
-A simple and accessible interface allowing patients to:
+### Authentication
 
-- View their vitals
-- Ask questions via voice
+**Caregivers** log in with a username and password (JWT-based, 8-hour session).
 
-## Alert System
-Critical alerts:
+**Patients** select their name from a dropdown. If a PIN was set during registration, a large-button numpad is shown for secure entry.
 
-- Trigger AI analysis
-- Are logged to **Datadog**
-- Can trigger voice announcements
+| Role | Auth Method | Protected Pages |
+|------|-------------|-----------------|
+| Caregiver | Username + Password | Dashboard, Register page |
+| Patient | Name + Optional PIN | Patient interface |
 
-## Kafka Integration
-Kafka handles data streaming between:
+A default caregiver account is created on first run:
+- **Username:** `admin`
+- **Password:** `admin123`
 
-- Vital simulator
-- Backend services
+> Change the default password before deploying to production.
 
-## Docker Support
-Kafka and Zookeeper can be launched quickly using **Docker Compose**.
+### Caregiver Dashboard
+- Live patient cards with vitals, risk badges, and sparkline trend charts
+- Real-time alert feed with AI summaries and recommended actions
+- Text-to-speech alert announcements (queued, mute toggle)
+- Alert history from the past 24 hours via Datadog
+
+### Alert System
+When an anomaly is detected:
+1. Groq AI assesses the risk score (0–100) and level
+2. Alert is logged to **Datadog** with full context
+3. Caregiver dashboard receives a real-time WebSocket push
+4. Caregiver is notified by voice announcement
+5. Patient's status message updates with a calm reassurance
+
+### Kafka Integration
+Kafka handles the data pipeline:
+- Simulator → Kafka topic `patient-vitals` → Backend consumer → WebSocket broadcast
+
+### Docker Support
+Kafka and Zookeeper are launched via **Docker Compose**.
 
 ---
 
-# Installation
+## Project Structure
 
-## Prerequisites
+```
+healthguard/
+│
+├── main.py                # FastAPI backend — API routes, WebSocket, Kafka consumer
+├── auth.py                # JWT authentication, password hashing, user management
+├── models.py              # Pydantic data models (Vitals, VitalEvent, RiskReport)
+├── groq_brain.py          # AI risk analysis using Groq Llama
+├── datadog_logger.py      # Datadog structured logging
+├── simulator.py           # Multi-threaded vital signs generator
+│
+├── patients.json          # Patient registry (auto-created)
+├── users.json             # Caregiver accounts (auto-created on first run)
+├── requirements.txt       # Python dependencies
+├── docker-compose.yml     # Kafka + Zookeeper setup
+├── .env.example           # Environment variable template
+│
+└── frontend/
+    ├── patient/           # Patient voice interface (multilingual, PIN auth)
+    ├── caregiver/         # Caregiver monitoring dashboard (login required)
+    └── register/          # Patient registration page (login required)
+```
+
+---
+
+## Installation
+
+### Prerequisites
 
 - Python 3.8+
 - Docker and Docker Compose
-- Node.js (optional, frontend is static HTML)
-
----
-
-## Steps
 
 ### 1. Clone the repository
 
 ```bash
 git clone https://github.com/yourusername/healthguard.git
 cd healthguard
-````
+```
 
 ### 2. Set up environment variables
-
-Copy the example file:
 
 ```bash
 cp .env.example .env
 ```
 
-Fill in the following variables:
+Fill in the following in `.env`:
 
-* `GROQ_API_KEY` – Get from Groq console
-* `ELEVENLABS_API_KEY` – Get from ElevenLabs
-* `ELEVENLABS_VOICE_ID` – Voice ID for speech
-* `DATADOG_API_KEY` – Get from Datadog
-* `DATADOG_SITE` – Usually `datadoghq.com`
-
----
+| Variable | Description |
+|----------|-------------|
+| `GROQ_API_KEY` | From [Groq Console](https://console.groq.com) |
+| `ELEVENLABS_API_KEY` | From [ElevenLabs](https://elevenlabs.io) |
+| `ELEVENLABS_VOICE_ID` | Voice ID for patient TTS |
+| `DATADOG_API_KEY` | From Datadog |
+| `DATADOG_APP_KEY` | From Datadog |
+| `DATADOG_SITE` | e.g. `datadoghq.com` |
+| `JWT_SECRET_KEY` | Any long random string (used to sign auth tokens) |
 
 ### 3. Install Python dependencies
 
@@ -118,157 +162,100 @@ Fill in the following variables:
 pip install -r requirements.txt
 ```
 
----
-
 ### 4. Start Kafka infrastructure
 
 ```bash
 docker-compose up -d
 ```
 
-This starts:
-
-* Zookeeper
-* Kafka
-* Kafka UI
-
----
+This starts Zookeeper, Kafka, and Kafka UI.
 
 ### 5. Run the backend
 
 ```bash
-python main.py
+uvicorn main:app --reload
 ```
 
-The server will start at:
+On first run, a default caregiver account is printed to the console:
 
 ```
-http://localhost:8000
+[AUTH] ✅ Default caregiver account created
+[AUTH]    username: admin
+[AUTH]    password: admin123
 ```
-
----
 
 ### 6. Run the simulator
 
-Open a **new terminal** and run:
+In a separate terminal:
 
 ```bash
 python simulator.py
 ```
 
-This will begin generating patient vitals.
+### 7. Open the interfaces
+
+| Interface | URL |
+|-----------|-----|
+| Caregiver Dashboard | http://localhost:8000/static/caregiver/index.html |
+| Patient Interface | http://localhost:8000/static/patient/index.html |
+| Patient Registration | http://localhost:8000/static/register/index.html |
+| API Docs | http://localhost:8000/docs |
 
 ---
 
-### 7. Access the interfaces
+## Usage
 
-Open these files in your browser:
-
-Patient UI
-
-```
-frontend/patient/index.html
-```
-
-Caregiver Dashboard
-
-```
-frontend/caregiver/index.html
-```
-
-Patient Registration
-
-```
-frontend/register/index.html
-```
-
----
-
-# Usage
-
-### 1. Register Patients
-
-Use the **registration page** to add patients.
-
-Patient data is stored in:
-
-```
-patients.json
-```
-
----
+### 1. Register a Patient
+1. Open the **Registration page** and log in with caregiver credentials
+2. Fill in name, age, condition, ward, and an optional 4-digit PIN
+3. The patient appears in the simulator and dashboards within ~5 seconds
 
 ### 2. Monitor Vitals
+The simulator sends vitals to Kafka every 2 seconds per patient. The backend processes them, runs AI analysis on anomalies, and broadcasts updates to all connected dashboards via WebSocket.
 
-The simulator sends data to **Kafka**.
+### 3. Patient Voice Interface
+1. Open the **Patient Interface**
+2. Select a language using the flag buttons
+3. Select your name from the dropdown and enter your PIN (if set)
+4. Tap the microphone button and ask a question:
+   > "How am I doing today?"
+   > "Is my heart rate normal?"
+5. The AI responds with a personalized, spoken answer
 
-The backend:
-
-* Processes vitals
-* Detects anomalies
-* Broadcasts updates via WebSocket.
-
----
-
-### 3. View Dashboards
-
-Caregivers can:
-
-* Monitor all patients
-* View alerts
-* Track vitals live
-
-Patients can:
-
-* View their vitals
-* Ask health questions
+### 4. Caregiver Dashboard
+1. Open the **Caregiver Dashboard** and log in
+2. View all active patients with live vitals and risk badges
+3. Click a patient card to expand sparkline trend charts
+4. The alert feed updates in real time with AI summaries and recommended actions
 
 ---
 
-### 4. Voice Interaction
+## API Reference
 
-Patients tap the **microphone button** and ask questions like:
-
-> "How am I doing today?"
-
-Responses are:
-
-* AI generated
-* Spoken using ElevenLabs.
-
----
-
-### 5. Alerts
-
-If anomalies occur:
-
-* AI analyzes the risk
-* Alerts are logged to **Datadog**
-* Caregivers are notified
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/login` | — | Caregiver login, returns JWT |
+| `POST` | `/patient-login` | — | Patient PIN verification |
+| `GET` | `/patients` | Caregiver | Full patient list |
+| `GET` | `/patients/public` | — | Patient names for dropdown |
+| `POST` | `/register` | Caregiver | Register new patient |
+| `DELETE` | `/patients/{id}` | Caregiver | Remove patient |
+| `POST` | `/ask` | — | Patient voice Q&A |
+| `GET` | `/alerts/history` | Caregiver | Past 24h alerts from Datadog |
+| `WS` | `/ws` | — | Real-time vitals and alerts |
 
 ---
 
-# Project Structure
+## Tech Stack
 
-```
-healthguard/
-│
-├── main.py                # FastAPI backend
-├── simulator.py           # Vital signs simulator
-├── gemini_brain.py        # AI analysis using Groq
-├── datadog_logger.py      # Datadog logging
-├── models.py              # Pydantic models
-├── consumer.py            # Kafka consumer
-│
-├── patients.json          # Patient registry
-├── requirements.txt       # Python dependencies
-├── docker-compose.yml     # Kafka setup
-├── .env.example           # Environment template
-│
-├── frontend/
-│   ├── patient/
-│   ├── caregiver/
-│   └── register/
-```
-
----
+| Layer | Technology |
+|-------|-----------|
+| Backend | FastAPI, Python, asyncio |
+| Auth | JWT (python-jose), bcrypt/sha256 (passlib) |
+| Messaging | Apache Kafka (kafka-python-ng) |
+| AI | Groq — Llama 3.3-70B |
+| Voice (TTS) | ElevenLabs, Web Speech API (fallback) |
+| Voice (STR) | Web Speech API (SpeechRecognition) |
+| Monitoring | Datadog |
+| Frontend | Vanilla HTML/CSS/JS, WebSockets |
+| Infrastructure | Docker Compose (Kafka + Zookeeper) |

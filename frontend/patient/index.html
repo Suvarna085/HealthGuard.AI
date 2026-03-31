@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" id="htmlRoot">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,270 +7,209 @@
 <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f0f4f8;
-    --surface: #ffffff;
-    --border: #e2e8f0;
-    --text: #2d3748;
-    --muted: #718096;
-    --accent: #3182ce;
-    --green: #38a169;
-    --red: #e53e3e;
-    --yellow: #d69e2e;
-    --font-head: 'Lora', serif;
-    --font-body: 'Source Sans 3', sans-serif;
+    --bg: #f0f4f8; --surface: #ffffff; --border: #e2e8f0;
+    --text: #2d3748; --muted: #718096; --accent: #3182ce;
+    --green: #38a169; --red: #e53e3e; --yellow: #d69e2e;
+    --font-head: 'Lora', serif; --font-body: 'Source Sans 3', sans-serif;
   }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    font-family: var(--font-body);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-
+  body { background: var(--bg); font-family: var(--font-body); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
   .container { width: 100%; max-width: 600px; }
 
-  /* ── Patient selector screen ── */
-  .selector-screen {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 40px 36px;
-    box-shadow: 0 2px 20px rgba(0,0,0,0.06);
-    text-align: center;
-  }
+  /* ── Language bar ── */
+  .lang-bar { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px; }
+  .lang-btn { padding: 8px 16px; border: 2px solid var(--border); border-radius: 20px; background: var(--surface); color: var(--text); font-size: 14px; cursor: pointer; transition: all 0.2s; font-family: var(--font-body); }
+  .lang-btn:hover { border-color: var(--accent); }
+  .lang-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(49, 130, 206, 0.06); font-weight: 600; }
 
+  /* ── Selector screen ── */
+  .selector-screen { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px 36px; box-shadow: 0 2px 20px rgba(0,0,0,0.06); text-align: center; }
   .selector-screen .icon { font-size: 56px; margin-bottom: 20px; display: block; }
-
-  .selector-screen h1 {
-    font-family: var(--font-head);
-    font-size: 26px; font-weight: 600;
-    color: var(--text); margin-bottom: 10px;
-  }
-
+  .selector-screen h1 { font-family: var(--font-head); font-size: 26px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
   .selector-screen p { font-size: 16px; color: var(--muted); margin-bottom: 32px; line-height: 1.5; }
-
-  .patient-select {
-    width: 100%;
-    padding: 14px 18px;
-    font-size: 18px;
-    font-family: var(--font-body);
-    border: 2px solid var(--border);
-    border-radius: 12px;
-    background: var(--bg);
-    color: var(--text);
-    margin-bottom: 20px;
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 16px center;
-    padding-right: 44px;
-  }
-
+  .patient-select { width: 100%; padding: 14px 18px; font-size: 18px; font-family: var(--font-body); border: 2px solid var(--border); border-radius: 12px; background: var(--bg); color: var(--text); margin-bottom: 20px; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; padding-right: 44px; }
   .patient-select:focus { outline: none; border-color: var(--accent); }
-
-  .start-btn {
-    width: 100%;
-    padding: 16px;
-    background: var(--accent);
-    color: white;
-    font-size: 18px;
-    font-family: var(--font-body);
-    font-weight: 600;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
+  .start-btn { width: 100%; padding: 16px; background: var(--accent); color: white; font-size: 18px; font-family: var(--font-body); font-weight: 600; border: none; border-radius: 12px; cursor: pointer; transition: all 0.2s; }
   .start-btn:hover { background: #2b6cb0; transform: translateY(-1px); }
   .start-btn:disabled { background: var(--muted); cursor: not-allowed; transform: none; }
 
-  /* ── Main app (hidden until patient selected) ── */
+  /* ── PIN screen ── */
+  .pin-screen { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px 36px; box-shadow: 0 2px 20px rgba(0,0,0,0.06); text-align: center; }
+  .pin-screen.visible { display: block; }
+  .pin-screen h2 { font-family: var(--font-head); font-size: 24px; color: var(--text); margin-bottom: 8px; }
+  .pin-screen p { color: var(--muted); font-size: 16px; margin-bottom: 28px; }
+  .pin-dots { display: flex; gap: 18px; justify-content: center; margin-bottom: 10px; }
+  .pin-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); background: transparent; transition: all 0.2s; }
+  .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
+  .pin-dot.error { background: var(--red); border-color: var(--red); animation: shake 0.35s; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+  .pin-error { color: var(--red); font-size: 14px; min-height: 22px; margin-bottom: 16px; }
+  .pin-pad { display: grid; grid-template-columns: repeat(3, 84px); gap: 14px; justify-content: center; margin-bottom: 24px; }
+  .pin-key { width: 84px; height: 84px; border-radius: 50%; border: 2px solid var(--border); background: var(--surface); font-size: 26px; font-weight: 600; cursor: pointer; transition: all 0.15s; color: var(--text); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .pin-key:hover { border-color: var(--accent); background: rgba(49,130,206,0.05); }
+  .pin-key:active { transform: scale(0.92); }
+  .pin-key.delete { color: var(--muted); }
+  .pin-back { background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 10px 24px; color: var(--muted); font-family: var(--font-body); font-size: 14px; cursor: pointer; transition: all 0.2s; }
+  .pin-back:hover { color: var(--text); border-color: var(--text); }
+
+  /* ── App screen ── */
   .app-screen { display: none; }
   .app-screen.visible { display: block; }
-
-  /* ── Header ── */
-  .app-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 28px;
-  }
-
-  .patient-chip {
-    display: flex; align-items: center; gap: 10px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 8px 16px;
-    font-size: 14px; color: var(--muted);
-    cursor: pointer;
-  }
-
+  .app-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+  .patient-chip { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 8px 16px; font-size: 14px; color: var(--muted); cursor: pointer; }
   .patient-chip strong { color: var(--text); }
 
-  /* ── Header ── */
   .header { text-align: center; margin-bottom: 28px; }
   .header-icon { font-size: 48px; margin-bottom: 12px; display: block; }
   .header h1 { font-family: var(--font-head); font-size: 28px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
   .header p { font-size: 16px; color: var(--muted); font-weight: 300; line-height: 1.5; }
 
-  /* ── Vitals Summary Card ── */
-  .vitals-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 20px; padding: 24px; margin-bottom: 24px;
-    box-shadow: 0 2px 20px rgba(0,0,0,0.06);
-  }
-
+  /* ── Vitals ── */
+  .vitals-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 20px rgba(0,0,0,0.06); }
   .vitals-card h2 { font-family: var(--font-head); font-size: 17px; color: var(--text); margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
-
   .vitals-simple { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
   .vital-simple-item { background: var(--bg); border-radius: 12px; padding: 14px; text-align: center; }
   .vital-simple-label { font-size: 12px; color: var(--muted); margin-bottom: 5px; }
   .vital-simple-value { font-size: 20px; font-weight: 600; color: var(--text); }
   .vital-simple-value.ok   { color: var(--green); }
   .vital-simple-value.warn { color: var(--yellow); }
   .vital-simple-value.bad  { color: var(--red); }
+  .status-message { margin-top: 16px; padding: 12px 16px; border-radius: 12px; background: rgba(56,161,105,0.08); border: 1px solid rgba(56,161,105,0.2); color: var(--green); font-size: 14px; font-weight: 600; text-align: center; }
+  .status-message.warn { background: rgba(214,158,46,0.08); border-color: rgba(214,158,46,0.2); color: var(--yellow); }
+  .status-message.bad  { background: rgba(229,62,62,0.08);  border-color: rgba(229,62,62,0.2);  color: var(--red); }
 
-  .status-message {
-    margin-top: 16px; padding: 12px 16px; border-radius: 12px;
-    background: rgba(56, 161, 105, 0.08); border: 1px solid rgba(56, 161, 105, 0.2);
-    color: var(--green); font-size: 14px; font-weight: 600; text-align: center;
-  }
-
-  .status-message.warn { background: rgba(214, 158, 46, 0.08); border-color: rgba(214, 158, 46, 0.2); color: var(--yellow); }
-  .status-message.bad  { background: rgba(229, 62, 62, 0.08); border-color: rgba(229, 62, 62, 0.2); color: var(--red); }
-
-  /* ── Voice Button ── */
+  /* ── Voice ── */
   .voice-section { text-align: center; margin-bottom: 24px; }
-
-  .voice-btn {
-    width: 100px; height: 100px; border-radius: 50%; border: none;
-    background: var(--accent); color: white; font-size: 38px;
-    cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
-    transition: all 0.2s; box-shadow: 0 4px 20px rgba(49, 130, 206, 0.4); margin-bottom: 14px;
-  }
-
+  .voice-btn { width: 100px; height: 100px; border-radius: 50%; border: none; background: var(--accent); color: white; font-size: 38px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 4px 20px rgba(49,130,206,0.4); margin-bottom: 14px; }
   .voice-btn:hover { transform: scale(1.05); }
   .voice-btn:active { transform: scale(0.97); }
-
-  .voice-btn.listening {
-    background: var(--red); box-shadow: 0 4px 20px rgba(229, 62, 62, 0.4);
-    animation: listening-pulse 1s ease-in-out infinite;
-  }
-
-  @keyframes listening-pulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 4px 20px rgba(229, 62, 62, 0.4); }
-    50% { transform: scale(1.06); box-shadow: 0 4px 40px rgba(229, 62, 62, 0.6); }
-  }
-
-  .voice-btn.thinking {
-    background: var(--yellow); box-shadow: 0 4px 20px rgba(214, 158, 46, 0.4);
-    animation: spin 1.5s linear infinite;
-  }
-
-  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
+  .voice-btn.listening { background: var(--red); box-shadow: 0 4px 20px rgba(229,62,62,0.4); animation: listening-pulse 1s ease-in-out infinite; }
+  @keyframes listening-pulse { 0%,100%{transform:scale(1);box-shadow:0 4px 20px rgba(229,62,62,0.4)} 50%{transform:scale(1.06);box-shadow:0 4px 40px rgba(229,62,62,0.6)} }
+  .voice-btn.thinking { background: var(--yellow); box-shadow: 0 4px 20px rgba(214,158,46,0.4); animation: spin 1.5s linear infinite; }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
   .voice-hint { font-size: 15px; color: var(--muted); display: block; }
+  .interim-text { font-size: 14px; color: var(--accent); font-style: italic; min-height: 20px; margin-top: 6px; }
 
-  /* ── Response Box ── */
-  .response-box {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 20px; padding: 22px 26px;
-    box-shadow: 0 2px 20px rgba(0,0,0,0.06);
-    min-height: 76px; display: flex; align-items: center; gap: 14px; margin-bottom: 18px;
-  }
+  /* ── Retry button ── */
+  .retry-btn { display: none; margin-top: 10px; padding: 8px 22px; border: 1px solid var(--accent); border-radius: 20px; background: transparent; color: var(--accent); font-size: 13px; cursor: pointer; font-family: var(--font-body); transition: all 0.2s; }
+  .retry-btn:hover { background: rgba(49,130,206,0.08); }
+  .retry-btn.show { display: inline-block; }
 
-  .response-avatar {
-    width: 42px; height: 42px; min-width: 42px;
-    background: linear-gradient(135deg, #3182ce, #63b3ed);
-    border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px;
-  }
-
+  /* ── Response ── */
+  .response-box { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 22px 26px; box-shadow: 0 2px 20px rgba(0,0,0,0.06); min-height: 76px; display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .response-avatar { width: 42px; height: 42px; min-width: 42px; background: linear-gradient(135deg, #3182ce, #63b3ed); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
   .response-text { font-size: 16px; color: var(--text); line-height: 1.6; }
   .response-text.muted { color: var(--muted); font-style: italic; }
 
-  /* ── Quick Questions ── */
+  /* ── Quick questions ── */
   .quick-questions h3 { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
-
   .quick-btns { display: flex; flex-wrap: wrap; gap: 8px; }
-
-  .quick-btn {
-    padding: 9px 16px; border: 1px solid var(--border); border-radius: 24px;
-    background: var(--surface); color: var(--text); font-size: 13px;
-    font-family: var(--font-body); cursor: pointer; transition: all 0.2s;
-  }
-
-  .quick-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(49, 130, 206, 0.05); }
+  .quick-btn { padding: 9px 16px; border: 1px solid var(--border); border-radius: 24px; background: var(--surface); color: var(--text); font-size: 13px; font-family: var(--font-body); cursor: pointer; transition: all 0.2s; }
+  .quick-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(49,130,206,0.05); }
 </style>
 </head>
 <body>
 <div class="container">
 
-  <!-- ── Patient Selector Screen ── -->
+  <!-- ── Screen 1: Patient Selector ── -->
   <div class="selector-screen" id="selectorScreen">
+
+    <!-- Language selector -->
+    <div class="lang-bar">
+      <button class="lang-btn active" onclick="setLang('en-US')">🇺🇸 EN</button>
+      <button class="lang-btn" onclick="setLang('es-ES')">🇪🇸 ES</button>
+      <button class="lang-btn" onclick="setLang('fr-FR')">🇫🇷 FR</button>
+      <button class="lang-btn" onclick="setLang('hi-IN')">🇮🇳 HI</button>
+      <button class="lang-btn" onclick="setLang('ar-SA')">🇸🇦 AR</button>
+    </div>
+
     <span class="icon">💊</span>
-    <h1>Welcome to HealthGuard</h1>
-    <p>Please select your name to get started.</p>
+    <h1 id="txt-welcome">Welcome to HealthGuard</h1>
+    <p id="txt-selectSub">Please select your name to get started.</p>
 
     <select class="patient-select" id="patientSelect">
       <option value="">— Select your name —</option>
     </select>
 
-    <button class="start-btn" id="startBtn" onclick="startApp()" disabled>Continue</button>
-    <button onclick="loadPatientOptions()" style="margin-top:12px;width:100%;padding:10px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--font-body);font-size:13px;cursor:pointer;">↻ Refresh list</button>
+    <button class="start-btn" id="startBtn" onclick="startApp()" disabled id="txt-continue">Continue</button>
+    <button onclick="loadPatientOptions()" style="margin-top:12px;width:100%;padding:10px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:var(--font-body);font-size:13px;cursor:pointer;" id="txt-refresh">↻ Refresh list</button>
   </div>
 
-  <!-- ── Main App Screen ── -->
+  <!-- ── Screen 2: PIN Entry ── -->
+  <div class="pin-screen" id="pinScreen">
+    <span class="icon">🔒</span>
+    <h2 id="txt-pinTitle">Enter your PIN</h2>
+    <p id="txt-pinSub">Please enter your 4-digit PIN to continue.</p>
+
+    <div class="pin-dots">
+      <span class="pin-dot" id="dot0"></span>
+      <span class="pin-dot" id="dot1"></span>
+      <span class="pin-dot" id="dot2"></span>
+      <span class="pin-dot" id="dot3"></span>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pinKey('1')">1</button>
+      <button class="pin-key" onclick="pinKey('2')">2</button>
+      <button class="pin-key" onclick="pinKey('3')">3</button>
+      <button class="pin-key" onclick="pinKey('4')">4</button>
+      <button class="pin-key" onclick="pinKey('5')">5</button>
+      <button class="pin-key" onclick="pinKey('6')">6</button>
+      <button class="pin-key" onclick="pinKey('7')">7</button>
+      <button class="pin-key" onclick="pinKey('8')">8</button>
+      <button class="pin-key" onclick="pinKey('9')">9</button>
+      <button class="pin-key delete" onclick="pinClear()">✕</button>
+      <button class="pin-key" onclick="pinKey('0')">0</button>
+      <button class="pin-key delete" onclick="pinBackspace()">⌫</button>
+    </div>
+    <button class="pin-back" onclick="backToSelector()" id="txt-pinBack">← Back</button>
+  </div>
+
+  <!-- ── Screen 3: Main App ── -->
   <div class="app-screen" id="appScreen">
 
     <div class="app-header">
       <div></div>
       <div class="patient-chip" onclick="switchPatient()">
-        👤 <strong id="patientNameChip">--</strong> · Change
+        👤 <strong id="patientNameChip">--</strong> · <span id="txt-change">Change</span>
       </div>
     </div>
 
     <div class="header">
       <span class="header-icon">💊</span>
-      <h1>Hello, how are you feeling?</h1>
-      <p>I am your HealthGuard assistant. I am here to help you understand how your body is doing.</p>
+      <h1 id="txt-greeting">Hello, how are you feeling?</h1>
+      <p id="txt-greetingSub">I am your HealthGuard assistant. I am here to help you understand how your body is doing.</p>
     </div>
 
     <div class="vitals-card">
-      <h2>❤️ Your Current Readings</h2>
+      <h2 id="txt-readings">❤️ Your Current Readings</h2>
       <div class="vitals-simple" id="vitalsSummary">
         <div class="vital-simple-item">
-          <div class="vital-simple-label">Heart Rate</div>
+          <div class="vital-simple-label" id="txt-hr">Heart Rate</div>
           <div class="vital-simple-value" id="hrVal">--</div>
         </div>
         <div class="vital-simple-item">
-          <div class="vital-simple-label">Blood Pressure</div>
+          <div class="vital-simple-label" id="txt-bp">Blood Pressure</div>
           <div class="vital-simple-value" id="bpVal">--</div>
         </div>
         <div class="vital-simple-item">
-          <div class="vital-simple-label">Oxygen Level</div>
+          <div class="vital-simple-label" id="txt-spo2">Oxygen Level</div>
           <div class="vital-simple-value" id="spo2Val">--</div>
         </div>
         <div class="vital-simple-item">
-          <div class="vital-simple-label">Temperature</div>
+          <div class="vital-simple-label" id="txt-temp">Temperature</div>
           <div class="vital-simple-value" id="tempVal">--</div>
         </div>
       </div>
-      <div class="status-message" id="overallStatus">
-        Connecting to your health monitor...
-      </div>
+      <div class="status-message" id="overallStatus" id="txt-connecting">Connecting to your health monitor...</div>
     </div>
 
     <div class="voice-section">
       <button class="voice-btn" id="voiceBtn" onclick="handleVoice()">🎙️</button>
       <span class="voice-hint" id="voiceHint">Tap to ask me anything</span>
+      <div class="interim-text" id="interimText"></div>
+      <button class="retry-btn" id="retryBtn" onclick="retryVoice()" id="txt-tryAgain">Try Again</button>
     </div>
 
     <div class="response-box">
@@ -281,12 +220,12 @@
     </div>
 
     <div class="quick-questions">
-      <h3>Quick Questions</h3>
-      <div class="quick-btns">
-        <button class="quick-btn" onclick="askQuestion('How am I doing today?')">How am I doing?</button>
-        <button class="quick-btn" onclick="askQuestion('Is my heart rate normal?')">Is my heart rate normal?</button>
-        <button class="quick-btn" onclick="askQuestion('What does my blood pressure mean?')">What does my BP mean?</button>
-        <button class="quick-btn" onclick="askQuestion('Should I be worried about anything?')">Should I worry?</button>
+      <h3 id="txt-quickQ">Quick Questions</h3>
+      <div class="quick-btns" id="quickBtns">
+        <button class="quick-btn" onclick="askQuestion(T('q1'))">How am I doing?</button>
+        <button class="quick-btn" onclick="askQuestion(T('q2'))">Is my heart rate normal?</button>
+        <button class="quick-btn" onclick="askQuestion(T('q3'))">What does my BP mean?</button>
+        <button class="quick-btn" onclick="askQuestion(T('q4'))">Should I worry?</button>
       </div>
     </div>
 
@@ -294,36 +233,179 @@
 </div>
 
 <script>
-// ── ElevenLabs config — replace with your actual values ──
+// ────────────────────────────────────────────
+// i18n — translations for key UI strings
+// ────────────────────────────────────────────
+const LANGS = {
+  'en-US': {
+    welcome: 'Welcome to HealthGuard',    selectSub: 'Please select your name to get started.',
+    selectPlaceholder: '— Select your name —', continue: 'Continue', refresh: '↻ Refresh list',
+    pinTitle: 'Enter your PIN',           pinSub: 'Please enter your 4-digit PIN to continue.',
+    pinBack: '← Back',                   pinWrong: 'Incorrect PIN. Please try again.',
+    greeting: 'Hello, how are you feeling?',
+    greetingSub: 'I am your HealthGuard assistant. I am here to help you understand how your body is doing.',
+    readings: '❤️ Your Current Readings', hr: 'Heart Rate', bp: 'Blood Pressure',
+    spo2: 'Oxygen Level',                temp: 'Temperature',
+    tapToAsk: 'Tap to ask me anything',  listening: 'Listening... tap to stop',
+    thinking: 'Thinking...',             change: 'Change',
+    quickQ: 'Quick Questions',           tryAgain: 'Try Again',
+    q1: 'How am I doing today?',         q2: 'Is my heart rate normal?',
+    q3: 'What does my blood pressure mean?', q4: 'Should I be worried about anything?',
+    errNoSpeech: 'I could not hear you. Please speak a little louder and try again.',
+    errMic: 'Microphone access was denied. Please allow microphone access in your browser settings.',
+    errNetwork: 'Connection issue. Please check your internet and try again.',
+    errGeneric: 'Sorry, I did not catch that. Please try again.',
+    errConnect: 'I am sorry, I could not connect right now. Please try again.',
+    heard: 'You said: ',
+  },
+  'es-ES': {
+    welcome: 'Bienvenido a HealthGuard',  selectSub: 'Por favor seleccione su nombre para comenzar.',
+    selectPlaceholder: '— Seleccione su nombre —', continue: 'Continuar', refresh: '↻ Actualizar lista',
+    pinTitle: 'Ingrese su PIN',           pinSub: 'Por favor ingrese su PIN de 4 dígitos.',
+    pinBack: '← Volver',                 pinWrong: 'PIN incorrecto. Por favor intente de nuevo.',
+    greeting: '¿Hola, cómo se siente hoy?',
+    greetingSub: 'Soy su asistente de HealthGuard. Estoy aquí para ayudarle a entender cómo está su cuerpo.',
+    readings: '❤️ Sus Lecturas Actuales', hr: 'Frecuencia Cardíaca', bp: 'Presión Arterial',
+    spo2: 'Nivel de Oxígeno',            temp: 'Temperatura',
+    tapToAsk: 'Toque para preguntarme',  listening: 'Escuchando... toque para detener',
+    thinking: 'Pensando...',             change: 'Cambiar',
+    quickQ: 'Preguntas Rápidas',         tryAgain: 'Intentar de Nuevo',
+    q1: '¿Cómo estoy hoy?',              q2: '¿Es normal mi frecuencia cardíaca?',
+    q3: '¿Qué significa mi presión arterial?', q4: '¿Debo preocuparme por algo?',
+    errNoSpeech: 'No pude escucharle. Por favor hable un poco más fuerte.',
+    errMic: 'Acceso al micrófono denegado. Por favor permita el acceso en su navegador.',
+    errNetwork: 'Problema de conexión. Verifique su internet e intente de nuevo.',
+    errGeneric: 'Lo siento, no le entendí. Por favor intente de nuevo.',
+    errConnect: 'Lo siento, no pude conectarme ahora. Por favor intente de nuevo.',
+    heard: 'Usted dijo: ',
+  },
+  'fr-FR': {
+    welcome: 'Bienvenue sur HealthGuard', selectSub: 'Veuillez sélectionner votre nom pour commencer.',
+    selectPlaceholder: '— Sélectionnez votre nom —', continue: 'Continuer', refresh: '↻ Actualiser',
+    pinTitle: 'Entrez votre PIN',         pinSub: 'Veuillez entrer votre PIN à 4 chiffres.',
+    pinBack: '← Retour',                 pinWrong: 'PIN incorrect. Veuillez réessayer.',
+    greeting: 'Bonjour, comment vous sentez-vous ?',
+    greetingSub: 'Je suis votre assistant HealthGuard. Je suis là pour vous aider à comprendre votre état de santé.',
+    readings: '❤️ Vos Lectures Actuelles', hr: 'Fréquence Cardiaque', bp: 'Tension Artérielle',
+    spo2: "Niveau d'Oxygène",            temp: 'Température',
+    tapToAsk: 'Touchez pour me poser une question', listening: 'J\'écoute... touchez pour arrêter',
+    thinking: 'Je réfléchis...',         change: 'Changer',
+    quickQ: 'Questions Rapides',         tryAgain: 'Réessayer',
+    q1: 'Comment vais-je aujourd\'hui ?', q2: 'Ma fréquence cardiaque est-elle normale ?',
+    q3: 'Que signifie ma tension artérielle ?', q4: 'Dois-je m\'inquiéter de quelque chose ?',
+    errNoSpeech: 'Je ne vous ai pas entendu. Parlez un peu plus fort, s\'il vous plaît.',
+    errMic: 'Accès au microphone refusé. Veuillez autoriser l\'accès dans votre navigateur.',
+    errNetwork: 'Problème de connexion. Vérifiez votre internet et réessayez.',
+    errGeneric: 'Désolé, je n\'ai pas compris. Veuillez réessayer.',
+    errConnect: 'Désolé, je n\'ai pas pu me connecter. Veuillez réessayer.',
+    heard: 'Vous avez dit : ',
+  },
+  'hi-IN': {
+    welcome: 'HealthGuard में आपका स्वागत है', selectSub: 'शुरू करने के लिए अपना नाम चुनें।',
+    selectPlaceholder: '— अपना नाम चुनें —', continue: 'जारी रखें', refresh: '↻ सूची ताज़ा करें',
+    pinTitle: 'अपना PIN दर्ज करें',      pinSub: 'कृपया अपना 4-अंकीय PIN दर्ज करें।',
+    pinBack: '← वापस',                  pinWrong: 'गलत PIN। कृपया पुनः प्रयास करें।',
+    greeting: 'नमस्ते, आज आप कैसा महसूस कर रहे हैं?',
+    greetingSub: 'मैं आपका HealthGuard सहायक हूँ। मैं आपको आपके स्वास्थ्य को समझने में मदद करने के लिए यहाँ हूँ।',
+    readings: '❤️ आपकी वर्तमान रीडिंग', hr: 'हृदय गति', bp: 'रक्तचाप',
+    spo2: 'ऑक्सीजन स्तर',               temp: 'तापमान',
+    tapToAsk: 'प्रश्न पूछने के लिए टैप करें', listening: 'सुन रहा हूँ... रोकने के लिए टैप करें',
+    thinking: 'सोच रहा हूँ...',          change: 'बदलें',
+    quickQ: 'त्वरित प्रश्न',             tryAgain: 'पुनः प्रयास करें',
+    q1: 'आज मैं कैसा हूँ?',              q2: 'क्या मेरी हृदय गति सामान्य है?',
+    q3: 'मेरा रक्तचाप क्या दर्शाता है?', q4: 'क्या मुझे चिंता करनी चाहिए?',
+    errNoSpeech: 'मैं आपको सुन नहीं सका। थोड़ा जोर से बोलें और पुनः प्रयास करें।',
+    errMic: 'माइक्रोफोन की अनुमति नहीं मिली। कृपया अपने ब्राउज़र में अनुमति दें।',
+    errNetwork: 'कनेक्शन समस्या। अपना इंटरनेट जांचें और पुनः प्रयास करें।',
+    errGeneric: 'माफ़ करें, मैं समझ नहीं पाया। कृपया पुनः प्रयास करें।',
+    errConnect: 'माफ़ करें, अभी कनेक्ट नहीं हो सका। कृपया पुनः प्रयास करें।',
+    heard: 'आपने कहा: ',
+  },
+  'ar-SA': {
+    welcome: 'مرحباً بك في HealthGuard', selectSub: 'الرجاء اختيار اسمك للبدء.',
+    selectPlaceholder: '— اختر اسمك —',  continue: 'متابعة', refresh: '↻ تحديث القائمة',
+    pinTitle: 'أدخل رمز PIN',            pinSub: 'الرجاء إدخال رمز PIN المكون من 4 أرقام.',
+    pinBack: '→ رجوع',                   pinWrong: 'رمز PIN غير صحيح. يرجى المحاولة مرة أخرى.',
+    greeting: 'مرحباً، كيف حالك اليوم؟',
+    greetingSub: 'أنا مساعدك في HealthGuard. أنا هنا لمساعدتك على فهم حالتك الصحية.',
+    readings: '❤️ قراءاتك الحالية',      hr: 'معدل ضربات القلب', bp: 'ضغط الدم',
+    spo2: 'مستوى الأكسجين',             temp: 'درجة الحرارة',
+    tapToAsk: 'اضغط لطرح سؤال',         listening: 'أستمع... اضغط للإيقاف',
+    thinking: 'أفكر...',                change: 'تغيير',
+    quickQ: 'أسئلة سريعة',              tryAgain: 'حاول مرة أخرى',
+    q1: 'كيف حالي اليوم؟',              q2: 'هل معدل ضربات قلبي طبيعي؟',
+    q3: 'ماذا يعني ضغط دمي؟',           q4: 'هل يجب أن أقلق؟',
+    errNoSpeech: 'لم أسمعك. الرجاء التحدث بصوت أعلى والمحاولة مرة أخرى.',
+    errMic: 'تم رفض الوصول إلى الميكروفون. يرجى السماح بالوصول في متصفحك.',
+    errNetwork: 'مشكلة في الاتصال. تحقق من الإنترنت وحاول مرة أخرى.',
+    errGeneric: 'عذراً، لم أفهم. يرجى المحاولة مرة أخرى.',
+    errConnect: 'عذراً، لم أتمكن من الاتصال الآن. يرجى المحاولة مرة أخرى.',
+    heard: 'قلت: ',
+  },
+};
+
+// Translation helper
+function T(key) { return (LANGS[selectedLang] || LANGS['en-US'])[key] || key; }
+
+// Apply all translated strings to the UI
+function applyLang() {
+  const isRTL = selectedLang === 'ar-SA';
+  document.getElementById('htmlRoot').setAttribute('dir', isRTL ? 'rtl' : 'ltr');
+
+  const map = {
+    'txt-welcome': 'welcome', 'txt-selectSub': 'selectSub',
+    'txt-pinTitle': 'pinTitle', 'txt-pinSub': 'pinSub', 'txt-pinBack': 'pinBack',
+    'txt-greeting': 'greeting', 'txt-greetingSub': 'greetingSub',
+    'txt-readings': 'readings', 'txt-hr': 'hr', 'txt-bp': 'bp',
+    'txt-spo2': 'spo2', 'txt-temp': 'temp', 'txt-change': 'change',
+    'txt-quickQ': 'quickQ', 'txt-tryAgain': 'tryAgain',
+  };
+  for (const [id, key] of Object.entries(map)) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = T(key);
+  }
+  document.getElementById('startBtn').textContent    = T('continue');
+  document.getElementById('voiceHint').textContent   = T('tapToAsk');
+  document.getElementById('patientSelect').options[0].text = T('selectPlaceholder');
+
+  // Rebuild quick question buttons with translated text
+  const qb = document.getElementById('quickBtns');
+  if (qb) qb.innerHTML = ['q1','q2','q3','q4'].map(k =>
+    `<button class="quick-btn" onclick="askQuestion(T('${k}'))">${T(k)}</button>`
+  ).join('');
+
+  // Update response placeholder
+  const rt = document.getElementById('responseText');
+  if (rt && rt.classList.contains('muted')) {
+    rt.textContent = T('greetingSub');
+  }
+}
+
+// ────────────────────────────────────────────
+// ElevenLabs config
+// ────────────────────────────────────────────
 const ELEVENLABS_API_KEY  = "sk_2facad0c946996e835e3fa3821f60db6d938a8408755a8d9";
 const ELEVENLABS_VOICE_ID = "21m00Tcm4TlvDq8ikWAM";
 
-// ── Speak using ElevenLabs browser SDK ──
 async function speakWithElevenLabs(text) {
   try {
     const res = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`,
       {
         method: "POST",
-        headers: {
-          "xi-api-key": ELEVENLABS_API_KEY,
-          "Content-Type": "application/json",
-        },
+        headers: { "xi-api-key": ELEVENLABS_API_KEY, "Content-Type": "application/json" },
         body: JSON.stringify({
-          text,
-          model_id: "eleven_turbo_v2_5",
+          text, model_id: "eleven_turbo_v2_5",
           voice_settings: { stability: 0.5, similarity_boost: 0.75 },
         }),
       }
     );
     if (!res.ok) throw new Error("ElevenLabs API error");
     const blob = await res.blob();
-    const arrayBuffer = await blob.arrayBuffer();
     const audioCtx = new AudioContext();
-    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+    const audioBuffer = await audioCtx.decodeAudioData(await blob.arrayBuffer());
     const source = audioCtx.createBufferSource();
     source.buffer = audioBuffer;
-    // GainNode allows volume above 1.0 — set to 3.0 for loud clear audio
     const gainNode = audioCtx.createGain();
     gainNode.gain.value = 3.0;
     source.connect(gainNode);
@@ -333,30 +415,50 @@ async function speakWithElevenLabs(text) {
     console.warn("ElevenLabs failed, falling back to browser TTS", e);
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = 0.9;
+    utterance.lang = selectedLang;
     window.speechSynthesis.speak(utterance);
   }
 }
 
-// ── State ──
-let MY_PATIENT_ID = null;
-let myVitals = null;
-let isListening = false;
-let recognition = null;
-let ws = null;
+// ────────────────────────────────────────────
+// State
+// ────────────────────────────────────────────
+let selectedLang     = 'en-US';
+let MY_PATIENT_ID    = null;
+let myVitals         = null;
+let isListening      = false;
+let recognition      = null;
+let ws               = null;
+let retryCount       = 0;
+let voiceTimeout     = null;
+const conversationHistory = [];  // { q, a } — last 3 pairs
+const MAX_HISTORY    = 3;
 
-// ── Patient selector ──
-// Load patients from registry into dropdown
+// ────────────────────────────────────────────
+// Language
+// ────────────────────────────────────────────
+function setLang(lang) {
+  selectedLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  const btn = [...document.querySelectorAll('.lang-btn')].find(b => b.onclick.toString().includes(`'${lang}'`));
+  if (btn) btn.classList.add('active');
+  applyLang();
+}
+
+// ────────────────────────────────────────────
+// Patient selector
+// ────────────────────────────────────────────
 async function loadPatientOptions() {
   try {
-    const res = await fetch("http://localhost:8000/patients");
+    const res = await fetch("http://localhost:8000/patients/public");
     const patients = await res.json();
     const select = document.getElementById("patientSelect");
-    select.innerHTML = "<option value=''>— Select your name —</option>";
+    select.innerHTML = `<option value="">${T('selectPlaceholder')}</option>`;
     if (patients.length === 0) {
       select.innerHTML += "<option disabled>No patients registered yet</option>";
     } else {
       patients.forEach(p => {
-        select.innerHTML += `<option value="${p.id}">${p.name} (Age ${p.age} · ${p.condition})</option>`;
+        select.innerHTML += `<option value="${p.id}" data-has-pin="${p.has_pin}">${p.name}</option>`;
       });
     }
   } catch (e) {
@@ -368,15 +470,100 @@ document.getElementById("patientSelect").addEventListener("change", function() {
   document.getElementById("startBtn").disabled = !this.value;
 });
 
-function startApp() {
+async function startApp() {
   const select = document.getElementById("patientSelect");
-  MY_PATIENT_ID = select.value;
-  const name = select.options[select.selectedIndex].text.split(" (")[0];
+  const selectedOption = select.options[select.selectedIndex];
+  MY_PATIENT_ID     = select.value;
+  const name        = selectedOption.text;
+  const hasPIN      = selectedOption.dataset.hasPins === "true" || selectedOption.getAttribute("data-has-pin") === "true";
 
   document.getElementById("patientNameChip").textContent = name;
-  document.getElementById("selectorScreen").style.display = "none";
-  document.getElementById("appScreen").classList.add("visible");
 
+  if (hasPIN) {
+    // Show PIN entry screen
+    document.getElementById("selectorScreen").style.display = "none";
+    document.getElementById("pinScreen").classList.add("visible");
+    pinBuffer = "";
+    updatePinDots();
+    document.getElementById("pinError").textContent = "";
+  } else {
+    // No PIN — go straight to app
+    enterApp();
+  }
+}
+
+// ────────────────────────────────────────────
+// PIN entry
+// ────────────────────────────────────────────
+let pinBuffer = "";
+
+function pinKey(digit) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += digit;
+  updatePinDots();
+  if (pinBuffer.length === 4) submitPIN();
+}
+
+function pinBackspace() {
+  pinBuffer = pinBuffer.slice(0, -1);
+  updatePinDots();
+}
+
+function pinClear() {
+  pinBuffer = "";
+  updatePinDots();
+}
+
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById(`dot${i}`);
+    dot.classList.toggle("filled", i < pinBuffer.length);
+    dot.classList.remove("error");
+  }
+}
+
+async function submitPIN() {
+  try {
+    const res = await fetch("http://localhost:8000/patient-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ patient_id: MY_PATIENT_ID, pin: pinBuffer }),
+    });
+    if (res.ok) {
+      document.getElementById("pinScreen").classList.remove("visible");
+      enterApp();
+    } else {
+      // Wrong PIN — shake dots, clear
+      for (let i = 0; i < 4; i++) {
+        const dot = document.getElementById(`dot${i}`);
+        dot.classList.add("error");
+      }
+      document.getElementById("pinError").textContent = T("pinWrong");
+      setTimeout(() => { pinBuffer = ""; updatePinDots(); }, 700);
+    }
+  } catch (e) {
+    document.getElementById("pinError").textContent = T("errConnect");
+    setTimeout(() => { pinBuffer = ""; updatePinDots(); }, 700);
+  }
+}
+
+function backToSelector() {
+  pinBuffer = "";
+  MY_PATIENT_ID = null;
+  document.getElementById("pinScreen").classList.remove("visible");
+  document.getElementById("selectorScreen").style.display = "block";
+  document.getElementById("patientSelect").value = "";
+  document.getElementById("startBtn").disabled = true;
+}
+
+// ────────────────────────────────────────────
+// Enter the main app
+// ────────────────────────────────────────────
+function enterApp() {
+  conversationHistory.length = 0;
+  document.getElementById("selectorScreen").style.display = "none";
+  document.getElementById("pinScreen").classList.remove("visible");
+  document.getElementById("appScreen").classList.add("visible");
   connectWS();
 }
 
@@ -384,17 +571,20 @@ function switchPatient() {
   if (ws) ws.close();
   MY_PATIENT_ID = null;
   myVitals = null;
+  conversationHistory.length = 0;
   document.getElementById("selectorScreen").style.display = "block";
   document.getElementById("appScreen").classList.remove("visible");
   document.getElementById("patientSelect").value = "";
   document.getElementById("startBtn").disabled = true;
+  resetVoiceBtn();
 }
 
-// ── WebSocket for live vitals ──
+// ────────────────────────────────────────────
+// WebSocket for live vitals
+// ────────────────────────────────────────────
 function connectWS() {
   if (ws && ws.readyState === WebSocket.OPEN) return;
   ws = new WebSocket("ws://localhost:8000/ws");
-
   ws.onmessage = (event) => {
     const data = JSON.parse(event.data);
     if (data.type === "vital" && data.patient_id === MY_PATIENT_ID) {
@@ -405,25 +595,19 @@ function connectWS() {
       showAlert(data);
     }
   };
-
-  ws.onclose = () => {
-    if (MY_PATIENT_ID) setTimeout(connectWS, 3000);
-  };
+  ws.onclose = () => { if (MY_PATIENT_ID) setTimeout(connectWS, 3000); };
 }
 
-// ── Update vitals display ──
+// ────────────────────────────────────────────
+// Vitals display
+// ────────────────────────────────────────────
 function updateVitalsDisplay(v, status) {
   document.getElementById("hrVal").textContent   = v.heart_rate_bpm + " bpm";
   document.getElementById("bpVal").textContent   = v.blood_pressure.replace(" mmHg", "");
   document.getElementById("spo2Val").textContent = v.spo2_percent + "%";
   document.getElementById("tempVal").textContent = v.temperature_f + "°F";
-
-  const spo2El = document.getElementById("spo2Val");
-  spo2El.className = "vital-simple-value " + (v.spo2_percent < 85 ? "bad" : v.spo2_percent < 92 ? "warn" : "ok");
-
-  const hrEl = document.getElementById("hrVal");
-  hrEl.className = "vital-simple-value " + (v.heart_rate_bpm > 130 ? "bad" : v.heart_rate_bpm > 100 ? "warn" : "ok");
-
+  document.getElementById("spo2Val").className = "vital-simple-value " + (v.spo2_percent < 85 ? "bad" : v.spo2_percent < 92 ? "warn" : "ok");
+  document.getElementById("hrVal").className   = "vital-simple-value " + (v.heart_rate_bpm > 130 ? "bad" : v.heart_rate_bpm > 100 ? "warn" : "ok");
   const statusEl = document.getElementById("overallStatus");
   if (status === "ANOMALY") {
     statusEl.textContent = "⚠️ Some readings need attention — your caregiver has been notified.";
@@ -434,7 +618,6 @@ function updateVitalsDisplay(v, status) {
   }
 }
 
-// ── Show critical alert ──
 function showAlert(data) {
   const statusEl = document.getElementById("overallStatus");
   statusEl.textContent = "🚨 " + data.summary;
@@ -442,85 +625,194 @@ function showAlert(data) {
   setResponse("I have notified your caregiver. " + data.recommended_action + " Please stay calm and do not worry.");
 }
 
-// ── Ask Gemini a question ──
+// ────────────────────────────────────────────
+// Ask question (with personalization + history)
+// ────────────────────────────────────────────
+function buildContext() {
+  let ctx = myVitals
+    ? `HR ${myVitals.heart_rate_bpm} bpm, BP ${myVitals.blood_pressure}, SpO2 ${myVitals.spo2_percent}%, Temp ${myVitals.temperature_f}°F`
+    : "No vitals available yet.";
+  return ctx;
+}
+
+function buildHistory() {
+  if (conversationHistory.length === 0) return "";
+  return conversationHistory.map(h => `Q: ${h.q}\nA: ${h.a}`).join("\n");
+}
+
 async function askQuestion(question) {
   setThinking();
-
-  const context = myVitals
-    ? `Patient vitals: HR ${myVitals.heart_rate_bpm} bpm, BP ${myVitals.blood_pressure}, SpO2 ${myVitals.spo2_percent}%, Temp ${myVitals.temperature_f}°F.`
-    : "No vitals available yet.";
+  document.getElementById("retryBtn").classList.remove("show");
 
   try {
     const res = await fetch("http://localhost:8000/ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question, context }),
+      body: JSON.stringify({
+        question,
+        context:    buildContext(),
+        patient_id: MY_PATIENT_ID || "",
+        language:   selectedLang,
+        history:    buildHistory(),
+      }),
     });
     const data = await res.json();
     setResponse(data.answer);
     speakWithElevenLabs(data.answer);
+
+    // Store in conversation history
+    conversationHistory.push({ q: question, a: data.answer });
+    if (conversationHistory.length > MAX_HISTORY) conversationHistory.shift();
+
   } catch (e) {
-    setResponse("I am sorry, I could not connect right now. Please try again.");
+    setResponse(T("errConnect"));
+    document.getElementById("retryBtn").classList.add("show");
   }
 
   resetVoiceBtn();
 }
 
-// ── Voice input ──
+// ────────────────────────────────────────────
+// Improved voice input
+// ────────────────────────────────────────────
 function handleVoice() {
   if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-    askQuestion("How am I doing today?");
+    // Browser doesn't support speech — fall back to a default question
+    askQuestion(T('q1'));
     return;
   }
-
   if (isListening) { recognition.stop(); return; }
+  startListening();
+}
 
+function startListening() {
+  retryCount = 0;
+  beginRecognition();
+}
+
+function retryVoice() {
+  document.getElementById("retryBtn").classList.remove("show");
+  document.getElementById("interimText").textContent = "";
+  retryCount = 0;
+  beginRecognition();
+}
+
+function beginRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   recognition = new SpeechRecognition();
-  recognition.lang = "en-US";
-  recognition.interimResults = false;
+  recognition.lang            = selectedLang;
+  recognition.interimResults  = true;
+  recognition.maxAlternatives = 1;
+  recognition.continuous      = false;
 
   recognition.onstart = () => {
     isListening = true;
-    document.getElementById("voiceBtn").className = "voice-btn listening";
-    document.getElementById("voiceBtn").textContent = "🔴";
-    document.getElementById("voiceHint").textContent = "Listening... tap to stop";
+    document.getElementById("voiceBtn").className    = "voice-btn listening";
+    document.getElementById("voiceBtn").textContent  = "🔴";
+    document.getElementById("voiceHint").textContent = T("listening");
+    document.getElementById("interimText").textContent = "";
+    document.getElementById("retryBtn").classList.remove("show");
+
+    // Auto-stop after 15 seconds of silence
+    voiceTimeout = setTimeout(() => {
+      if (isListening) { recognition.stop(); }
+    }, 15000);
   };
 
   recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    document.getElementById("responseText").textContent = "You said: \"" + transcript + "\"";
-    document.getElementById("responseText").className = "response-text muted";
-    askQuestion(transcript);
+    clearTimeout(voiceTimeout);
+    let interimTranscript = "";
+    let finalTranscript   = "";
+
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const text = event.results[i][0].transcript;
+      if (event.results[i].isFinal) finalTranscript += text;
+      else interimTranscript += text;
+    }
+
+    // Show partial transcript as user speaks
+    if (interimTranscript) {
+      document.getElementById("interimText").textContent = "…" + interimTranscript;
+    }
+
+    if (finalTranscript) {
+      document.getElementById("responseText").textContent = T("heard") + `"${finalTranscript}"`;
+      document.getElementById("responseText").className   = "response-text muted";
+      document.getElementById("interimText").textContent  = "";
+      askQuestion(finalTranscript);
+    }
   };
 
-  recognition.onerror = () => { resetVoiceBtn(); setResponse("Sorry, I did not catch that. Please try again."); };
-  recognition.onend   = () => { isListening = false; resetVoiceBtn(); };
+  recognition.onerror = (event) => {
+    clearTimeout(voiceTimeout);
+    isListening = false;
+    resetVoiceBtn();
+    document.getElementById("interimText").textContent = "";
+
+    switch (event.error) {
+      case "no-speech":
+        // Auto-retry once, then show message
+        if (retryCount < 1) {
+          retryCount++;
+          setTimeout(beginRecognition, 500);
+          return;
+        }
+        setResponse(T("errNoSpeech"));
+        document.getElementById("retryBtn").classList.add("show");
+        break;
+      case "audio-capture":
+      case "not-allowed":
+        setResponse(T("errMic"));
+        break;
+      case "network":
+        setResponse(T("errNetwork"));
+        document.getElementById("retryBtn").classList.add("show");
+        break;
+      default:
+        setResponse(T("errGeneric"));
+        document.getElementById("retryBtn").classList.add("show");
+    }
+  };
+
+  recognition.onend = () => {
+    clearTimeout(voiceTimeout);
+    isListening = false;
+    resetVoiceBtn();
+  };
+
   recognition.start();
 }
 
+// ────────────────────────────────────────────
+// UI helpers
+// ────────────────────────────────────────────
 function setThinking() {
-  document.getElementById("voiceBtn").className = "voice-btn thinking";
-  document.getElementById("voiceBtn").textContent = "⏳";
-  document.getElementById("voiceHint").textContent = "Thinking...";
-  document.getElementById("responseText").textContent = "Let me check that for you...";
-  document.getElementById("responseText").className = "response-text muted";
+  document.getElementById("voiceBtn").className    = "voice-btn thinking";
+  document.getElementById("voiceBtn").textContent  = "⏳";
+  document.getElementById("voiceHint").textContent = T("thinking");
+  document.getElementById("responseText").textContent = "...";
+  document.getElementById("responseText").className   = "response-text muted";
 }
 
 function setResponse(text) {
   document.getElementById("responseText").textContent = text;
-  document.getElementById("responseText").className = "response-text";
+  document.getElementById("responseText").className   = "response-text";
 }
 
 function resetVoiceBtn() {
   isListening = false;
-  document.getElementById("voiceBtn").className = "voice-btn";
-  document.getElementById("voiceBtn").textContent = "🎙️";
-  document.getElementById("voiceHint").textContent = "Tap to ask me anything";
+  document.getElementById("voiceBtn").className    = "voice-btn";
+  document.getElementById("voiceBtn").textContent  = "🎙️";
+  document.getElementById("voiceHint").textContent = T("tapToAsk");
 }
 
-// Init — load patients on page load
-window.addEventListener("DOMContentLoaded", loadPatientOptions);
+// ────────────────────────────────────────────
+// Init
+// ────────────────────────────────────────────
+window.addEventListener("DOMContentLoaded", () => {
+  applyLang();
+  loadPatientOptions();
+});
 </script>
 </body>
 </html>

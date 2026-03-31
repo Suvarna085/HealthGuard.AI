@@ -91,9 +91,61 @@
 
   .error-msg { color: var(--red); font-size: 13px; margin-top: 12px; font-family: var(--font-mono); display: none; }
   .error-msg.show { display: block; }
+
+  /* ── Login Overlay ── */
+  #loginOverlay {
+    display: none; position: fixed; inset: 0;
+    background: var(--bg); z-index: 9999;
+    align-items: center; justify-content: center;
+  }
+  #loginOverlay.active { display: flex; }
+  .login-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 48px 40px; width: 380px; max-width: 90vw;
+  }
+  .login-box .brand { text-align: center; margin-bottom: 36px; }
+  .login-box .brand-name { font-family: var(--font-mono); font-size: 20px; color: var(--accent); font-weight: 600; letter-spacing: 0.1em; }
+  .login-box .brand-sub { font-size: 11px; color: var(--muted); font-family: var(--font-mono); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 4px; }
+  .login-error {
+    display: none; background: rgba(255,51,51,0.08); border: 1px solid rgba(255,51,51,0.3);
+    border-radius: 6px; padding: 10px 14px; color: var(--red);
+    font-size: 12px; font-family: var(--font-mono); margin-bottom: 16px;
+  }
+  .login-error.show { display: block; }
+  .login-input {
+    width: 100%; padding: 13px 16px; margin-bottom: 12px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-family: var(--font-mono);
+    font-size: 14px; outline: none; transition: border-color 0.2s;
+  }
+  .login-input:focus { border-color: var(--accent); }
+  .login-btn {
+    width: 100%; padding: 13px; margin-top: 8px;
+    background: var(--accent); color: #000; font-family: var(--font-mono);
+    font-size: 14px; font-weight: 600; border: none; border-radius: 8px;
+    cursor: pointer; letter-spacing: 0.08em; transition: opacity 0.2s;
+  }
+  .login-btn:hover { opacity: 0.88; }
+  .login-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 </style>
 </head>
 <body>
+
+<!-- Login Overlay -->
+<div id="loginOverlay" class="active">
+  <div class="login-box">
+    <div class="brand">
+      <div class="brand-name">⬡ HEALTHGUARD</div>
+      <div class="brand-sub">Caregiver Access</div>
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <input class="login-input" type="text" id="loginUsername" placeholder="Username" autocomplete="username" />
+    <input class="login-input" type="password" id="loginPassword" placeholder="Password" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter') doLogin()" />
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">AUTHENTICATE</button>
+  </div>
+</div>
+
 <div class="container">
 
   <div class="header">
@@ -140,6 +192,11 @@
       <input type="text" id="ward" placeholder="e.g. Ward 3B / Room 12">
     </div>
 
+    <div class="field">
+      <label>Patient PIN <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(optional — 4 digits for patient login)</span></label>
+      <input type="password" id="pin" placeholder="e.g. 1234" maxlength="4" pattern="\d{4}" inputmode="numeric">
+    </div>
+
     <button class="submit-btn" id="submitBtn" onclick="registerPatient()">Register Patient</button>
     <div class="error-msg" id="errorMsg">Please fill in all required fields.</div>
   </div>
@@ -170,6 +227,64 @@
 </div>
 
 <script>
+// ── Auth ──
+function getToken() { return sessionStorage.getItem('hg_token'); }
+function authHeaders() {
+  const t = getToken();
+  return t ? { 'Authorization': `Bearer ${t}` } : {};
+}
+
+async function doLogin() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginError');
+
+  if (!username || !password) {
+    err.textContent = 'Enter username and password.';
+    err.classList.add('show'); return;
+  }
+  btn.disabled = true; btn.textContent = 'AUTHENTICATING...';
+  err.classList.remove('show');
+
+  try {
+    const body = new URLSearchParams({ username, password });
+    const res = await fetch('/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+    });
+    if (res.ok) {
+      const data = await res.json();
+      sessionStorage.setItem('hg_token', data.access_token);
+      document.getElementById('loginOverlay').classList.remove('active');
+      loadPatients();
+    } else {
+      const data = await res.json();
+      err.textContent = data.detail || 'Authentication failed.';
+      err.classList.add('show');
+    }
+  } catch (e) {
+    err.textContent = 'Could not reach server.';
+    err.classList.add('show');
+  }
+  btn.disabled = false; btn.textContent = 'AUTHENTICATE';
+}
+
+async function checkAuth() {
+  const token = getToken();
+  if (!token) { return; }
+  const res = await fetch('/patients', { headers: authHeaders() }).catch(() => null);
+  if (res && res.status === 401) {
+    sessionStorage.removeItem('hg_token');
+    return;
+  }
+  document.getElementById('loginOverlay').classList.remove('active');
+  loadPatients();
+}
+
+window.addEventListener('DOMContentLoaded', checkAuth);
+
 async function registerPatient() {
   const name      = document.getElementById("name").value.trim();
   const age       = document.getElementById("age").value;
@@ -187,8 +302,8 @@ async function registerPatient() {
   try {
     const res = await fetch("http://localhost:8000/register", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, age: parseInt(age), condition, ward }),
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ name, age: parseInt(age), condition, ward, pin: document.getElementById("pin").value.trim() }),
     });
     const data = await res.json();
 
@@ -214,19 +329,20 @@ function resetForm() {
   document.getElementById("age").value       = "";
   document.getElementById("condition").value = "";
   document.getElementById("ward").value      = "";
+  document.getElementById("pin").value       = "";
   document.getElementById("formCard").style.display = "block";
   document.getElementById("successCard").classList.remove("show");
 }
 
 async function removePatient(id, name) {
   if (!confirm(`Remove ${name} from monitoring?`)) return;
-  await fetch(`http://localhost:8000/patients/${id}`, { method: "DELETE" });
+  await fetch(`http://localhost:8000/patients/${id}`, { method: "DELETE", headers: authHeaders() });
   loadPatients();
 }
 
 async function loadPatients() {
   try {
-    const res = await fetch("http://localhost:8000/patients");
+    const res = await fetch("http://localhost:8000/patients", { headers: authHeaders() });
     const patients = await res.json();
 
     document.getElementById("patientCount").textContent = `${patients.length} registered`;
@@ -254,8 +370,7 @@ async function loadPatients() {
   }
 }
 
-// Load on start, refresh every 10s
-loadPatients();
+// Refresh patient list every 10s
 setInterval(loadPatients, 10000);
 </script>
 </body>

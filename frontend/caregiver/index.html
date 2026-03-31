@@ -32,7 +32,6 @@
     overflow-x: hidden;
   }
 
-  /* ── Scanline overlay for atmosphere ── */
   body::before {
     content: '';
     position: fixed;
@@ -48,7 +47,6 @@
     z-index: 1000;
   }
 
-  /* ── Header ── */
   header {
     display: flex;
     align-items: center;
@@ -61,20 +59,13 @@
     z-index: 100;
   }
 
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
+  .logo { display: flex; align-items: center; gap: 12px; }
 
   .logo-icon {
-    width: 36px;
-    height: 36px;
+    width: 36px; height: 36px;
     border: 2px solid var(--accent);
     border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     font-size: 18px;
     animation: pulse-border 2s ease-in-out infinite;
   }
@@ -84,95 +75,50 @@
     50% { box-shadow: 0 0 0 6px rgba(0, 212, 255, 0); }
   }
 
-  .logo-text {
-    font-family: var(--font-mono);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--accent);
-    letter-spacing: 0.05em;
-  }
+  .logo-text { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--accent); letter-spacing: 0.05em; }
+  .logo-sub { font-size: 11px; color: var(--muted); font-family: var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; }
 
-  .logo-sub {
+  .header-right { display: flex; align-items: center; gap: 24px; }
+
+  .connection-status { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); transition: background 0.3s; }
+  .status-dot.connected { background: var(--green); box-shadow: 0 0 8px var(--green); animation: blink 1.5s ease-in-out infinite; }
+
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  .clock { font-family: var(--font-mono); font-size: 13px; color: var(--text); }
+
+  /* ── Speech queue indicator ── */
+  .speech-indicator {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
     font-size: 11px;
-    color: var(--muted);
-    font-family: var(--font-mono);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(0, 212, 255, 0.08);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 20px;
+    padding: 3px 10px;
+  }
+  .speech-indicator.active { display: flex; }
+  .speech-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    animation: blink 0.8s ease-in-out infinite;
   }
 
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-  }
-
-  .connection-status {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--muted);
-  }
-
-  .status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--muted);
-    transition: background 0.3s;
-  }
-
-  .status-dot.connected {
-    background: var(--green);
-    box-shadow: 0 0 8px var(--green);
-    animation: blink 1.5s ease-in-out infinite;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  .clock {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--text);
-  }
-
-  /* ── Main layout ── */
-  main {
-    padding: 24px 32px;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
+  main { padding: 24px 32px; max-width: 1400px; margin: 0 auto; }
 
   .section-label {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--muted);
+    letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
   }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-  .section-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  /* ── Patient Cards Grid ── */
-  .patients-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-    gap: 20px;
-    margin-bottom: 32px;
-  }
+  .patients-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 20px; margin-bottom: 32px; }
 
   .patient-card {
     background: var(--surface);
@@ -182,19 +128,14 @@
     position: relative;
     overflow: hidden;
     transition: border-color 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+    user-select: none;
   }
 
   .patient-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: var(--green);
-    transition: background 0.3s;
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--green); transition: background 0.3s;
   }
-
   .patient-card.warning::before { background: var(--yellow); }
   .patient-card.high::before { background: var(--orange); }
   .patient-card.critical::before { background: var(--red); }
@@ -209,230 +150,146 @@
     50% { box-shadow: 0 0 40px rgba(255, 51, 51, 0.25); }
   }
 
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 16px;
-  }
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
 
-  .patient-info h3 {
-    font-size: 16px;
-    font-weight: 600;
-    color: white;
-    margin-bottom: 4px;
-  }
-
-  .patient-meta {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--muted);
-  }
+  .patient-info h3 { font-size: 16px; font-weight: 600; color: white; margin-bottom: 4px; }
+  .patient-meta { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
 
   .risk-badge {
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    background: rgba(0, 255, 136, 0.1);
-    color: var(--green);
-    border: 1px solid rgba(0, 255, 136, 0.3);
+    padding: 4px 10px; border-radius: 20px; font-family: var(--font-mono);
+    font-size: 11px; font-weight: 600; letter-spacing: 0.05em;
+    background: rgba(0, 255, 136, 0.1); color: var(--green); border: 1px solid rgba(0, 255, 136, 0.3);
     transition: all 0.3s;
   }
+  .risk-badge.MODERATE { background: rgba(255, 214, 10, 0.1); color: var(--yellow); border-color: rgba(255, 214, 10, 0.3); }
+  .risk-badge.HIGH { background: rgba(255, 140, 0, 0.1); color: var(--orange); border-color: rgba(255, 140, 0, 0.3); }
+  .risk-badge.CRITICAL { background: rgba(255, 51, 51, 0.15); color: var(--red); border-color: rgba(255, 51, 51, 0.4); animation: badge-flash 0.8s ease-in-out infinite; }
 
-  .risk-badge.MODERATE {
-    background: rgba(255, 214, 10, 0.1);
-    color: var(--yellow);
-    border-color: rgba(255, 214, 10, 0.3);
-  }
+  @keyframes badge-flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 
-  .risk-badge.HIGH {
-    background: rgba(255, 140, 0, 0.1);
-    color: var(--orange);
-    border-color: rgba(255, 140, 0, 0.3);
-  }
+  .vitals-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
 
-  .risk-badge.CRITICAL {
-    background: rgba(255, 51, 51, 0.15);
-    color: var(--red);
-    border-color: rgba(255, 51, 51, 0.4);
-    animation: badge-flash 0.8s ease-in-out infinite;
-  }
-
-  @keyframes badge-flash {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
-  }
-
-  /* ── Vitals Grid ── */
-  .vitals-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 14px;
-  }
-
-  .vital-item {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 12px;
-  }
-
-  .vital-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-
-  .vital-value {
-    font-family: var(--font-mono);
-    font-size: 15px;
-    font-weight: 600;
-    color: white;
-    transition: color 0.3s;
-  }
-
+  .vital-item { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+  .vital-label { font-family: var(--font-mono); font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+  .vital-value { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: white; transition: color 0.3s; }
   .vital-value.danger { color: var(--red); }
   .vital-value.warning { color: var(--yellow); }
 
-  .card-timestamp {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--muted);
-    text-align: right;
-  }
+  .card-timestamp { font-family: var(--font-mono); font-size: 10px; color: var(--muted); text-align: right; }
 
-  /* ── Alert Feed ── */
-  .alerts-panel {
-    background: var(--surface);
+  .expand-hint {
+    font-family: var(--font-mono); font-size: 9px; color: var(--muted);
+    text-align: center; padding: 4px 0 2px; opacity: 0.5;
+    letter-spacing: 0.05em; transition: opacity 0.2s;
+  }
+  .patient-card:hover .expand-hint { opacity: 0.9; }
+
+  .sparkline-panel {
+    display: none; border-top: 1px solid var(--border);
+    margin-top: 12px; padding-top: 14px;
+    grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .sparkline-panel.open { display: grid; }
+
+  .sparkline-block { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+  .sparkline-label { font-family: var(--font-mono); font-size: 9px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .sparkline-collecting { height: 40px; display: flex; align-items: center; font-family: var(--font-mono); font-size: 10px; color: #2a3a4a; }
+
+  .alerts-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .alerts-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .alerts-title { font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; }
+
+  .alerts-header-right { display: flex; align-items: center; gap: 10px; }
+
+  .alert-count { background: rgba(255, 51, 51, 0.15); color: var(--red); border: 1px solid rgba(255, 51, 51, 0.3); border-radius: 20px; padding: 2px 10px; font-family: var(--font-mono); font-size: 11px; }
+
+  .mute-btn {
+    background: rgba(255,255,255,0.05);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-  }
-
-  .alerts-header {
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .alerts-title {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--accent);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .alert-count {
-    background: rgba(255, 51, 51, 0.15);
-    color: var(--red);
-    border: 1px solid rgba(255, 51, 51, 0.3);
     border-radius: 20px;
     padding: 2px 10px;
     font-family: var(--font-mono);
     font-size: 11px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
   }
+  .mute-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .mute-btn.muted { color: var(--red); border-color: rgba(255,51,51,0.3); }
 
-  .alerts-list {
-    max-height: 320px;
-    overflow-y: auto;
-  }
-
+  .alerts-list { max-height: 320px; overflow-y: auto; }
   .alerts-list::-webkit-scrollbar { width: 4px; }
   .alerts-list::-webkit-scrollbar-track { background: var(--surface); }
   .alerts-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
   .alert-item {
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 14px;
-    align-items: start;
-    animation: slide-in 0.3s ease-out;
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    display: grid; grid-template-columns: auto 1fr auto; gap: 14px;
+    align-items: start; animation: slide-in 0.3s ease-out;
   }
-
-  @keyframes slide-in {
-    from { opacity: 0; transform: translateX(-10px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-
+  @keyframes slide-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
   .alert-item:last-child { border-bottom: none; }
 
-  .alert-level-indicator {
-    width: 4px;
-    height: 100%;
-    border-radius: 2px;
-    min-height: 40px;
-    background: var(--red);
-    align-self: stretch;
-  }
-
+  .alert-level-indicator { width: 4px; border-radius: 2px; min-height: 40px; background: var(--red); align-self: stretch; }
   .alert-level-indicator.HIGH { background: var(--orange); }
   .alert-level-indicator.MODERATE { background: var(--yellow); }
 
-  .alert-body {}
+  .alert-patient { font-size: 13px; font-weight: 600; color: white; margin-bottom: 3px; }
+  .alert-summary { font-size: 12px; color: var(--text); margin-bottom: 4px; line-height: 1.5; }
+  .alert-action { font-size: 11px; color: var(--accent); font-family: var(--font-mono); }
+  .alert-time { font-family: var(--font-mono); font-size: 10px; color: var(--muted); white-space: nowrap; }
 
-  .alert-patient {
-    font-size: 13px;
-    font-weight: 600;
-    color: white;
-    margin-bottom: 3px;
-  }
+  .empty-alerts { padding: 40px; text-align: center; color: var(--muted); font-family: var(--font-mono); font-size: 12px; }
 
-  .alert-summary {
-    font-size: 12px;
-    color: var(--text);
-    margin-bottom: 4px;
-    line-height: 1.5;
-  }
-
-  .alert-action {
-    font-size: 11px;
-    color: var(--accent);
-    font-family: var(--font-mono);
-  }
-
-  .alert-time {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--muted);
-    white-space: nowrap;
-  }
-
-  .empty-alerts {
-    padding: 40px;
-    text-align: center;
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: 12px;
-  }
-
-  /* ── No connection overlay ── */
   .disconnected-banner {
-    display: none;
-    background: rgba(255, 51, 51, 0.1);
-    border: 1px solid rgba(255, 51, 51, 0.3);
-    border-radius: 8px;
-    padding: 12px 20px;
-    margin-bottom: 24px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--red);
-    text-align: center;
+    display: none; background: rgba(255, 51, 51, 0.1); border: 1px solid rgba(255, 51, 51, 0.3);
+    border-radius: 8px; padding: 12px 20px; margin-bottom: 24px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--red); text-align: center;
   }
-
   .disconnected-banner.show { display: block; }
+
+  /* ── Login Overlay ── */
+  #loginOverlay {
+    display: none; position: fixed; inset: 0;
+    background: var(--bg); z-index: 9999;
+    align-items: center; justify-content: center;
+  }
+  #loginOverlay.active { display: flex; }
+  .login-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 48px 40px; width: 380px; max-width: 90vw;
+  }
+  .login-box .brand { text-align: center; margin-bottom: 36px; }
+  .login-box .brand-name { font-family: var(--font-mono); font-size: 20px; color: var(--accent); font-weight: 600; letter-spacing: 0.1em; }
+  .login-box .brand-sub { font-size: 11px; color: var(--muted); font-family: var(--font-mono); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 4px; }
+  .login-error {
+    display: none; background: rgba(255,51,51,0.08); border: 1px solid rgba(255,51,51,0.3);
+    border-radius: 6px; padding: 10px 14px; color: var(--red);
+    font-size: 12px; font-family: var(--font-mono); margin-bottom: 16px;
+  }
+  .login-error.show { display: block; }
+  .login-input {
+    width: 100%; padding: 13px 16px; margin-bottom: 12px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-family: var(--font-mono);
+    font-size: 14px; outline: none; transition: border-color 0.2s;
+  }
+  .login-input:focus { border-color: var(--accent); }
+  .login-btn {
+    width: 100%; padding: 13px; margin-top: 8px;
+    background: var(--accent); color: #000; font-family: var(--font-mono);
+    font-size: 14px; font-weight: 600; border: none; border-radius: 8px;
+    cursor: pointer; letter-spacing: 0.08em; transition: opacity 0.2s;
+  }
+  .login-btn:hover { opacity: 0.88; }
+  .login-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .logout-btn {
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    padding: 6px 14px; border-radius: 6px; font-size: 11px; font-family: var(--font-mono);
+    cursor: pointer; transition: all 0.2s; letter-spacing: 0.05em;
+  }
+  .logout-btn:hover { border-color: var(--red); color: var(--red); }
 </style>
 </head>
 <body>
@@ -446,13 +303,33 @@
     </div>
   </div>
   <div class="header-right">
+    <div class="speech-indicator" id="speechIndicator">
+      <div class="speech-dot"></div>
+      <span id="speechLabel">Speaking...</span>
+    </div>
     <div class="connection-status">
       <div class="status-dot" id="statusDot"></div>
       <span id="statusText">Connecting...</span>
     </div>
     <div class="clock" id="clock">--:--:--</div>
+    <button class="logout-btn" onclick="logout()">LOGOUT</button>
   </div>
 </header>
+
+<!-- Login Overlay -->
+<div id="loginOverlay" class="active">
+  <div class="login-box">
+    <div class="brand">
+      <div class="brand-name">⬡ HEALTHGUARD</div>
+      <div class="brand-sub">Caregiver Access</div>
+    </div>
+    <div class="login-error" id="loginError"></div>
+    <input class="login-input" type="text" id="loginUsername" placeholder="Username" autocomplete="username" />
+    <input class="login-input" type="password" id="loginPassword" placeholder="Password" autocomplete="current-password"
+      onkeydown="if(event.key==='Enter') doLogin()" />
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">AUTHENTICATE</button>
+  </div>
+</div>
 
 <main>
 
@@ -461,17 +338,16 @@
   </div>
 
   <div class="section-label">Live Patient Vitals</div>
-
-  <div class="patients-grid" id="patientsGrid">
-    <!-- Patient cards injected by JS -->
-  </div>
+  <div class="patients-grid" id="patientsGrid"></div>
 
   <div class="section-label">Alert Feed</div>
-
   <div class="alerts-panel">
     <div class="alerts-header">
       <div class="alerts-title">⚡ Real-time Alerts</div>
-      <div class="alert-count" id="alertCount">0 alerts</div>
+      <div class="alerts-header-right">
+        <div class="alert-count" id="alertCount">0 alerts</div>
+        <button class="mute-btn" id="muteBtn" onclick="toggleMute()">🔊 sound on</button>
+      </div>
     </div>
     <div class="alerts-list" id="alertsList">
       <div class="empty-alerts">No alerts yet — monitoring active patients...</div>
@@ -481,22 +357,218 @@
 </main>
 
 <script>
-// ── Patient state — loaded dynamically from /patients ──
+// ── Auth ──
+function getToken() { return sessionStorage.getItem('hg_token'); }
+
+function authHeaders() {
+  const t = getToken();
+  return t ? { 'Authorization': `Bearer ${t}` } : {};
+}
+
+async function doLogin() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('loginBtn');
+  const err = document.getElementById('loginError');
+
+  if (!username || !password) {
+    err.textContent = 'Enter username and password.';
+    err.classList.add('show'); return;
+  }
+  btn.disabled = true; btn.textContent = 'AUTHENTICATING...';
+  err.classList.remove('show');
+
+  try {
+    const body = new URLSearchParams({ username, password });
+    const res = await fetch('/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+    });
+    if (res.ok) {
+      const data = await res.json();
+      sessionStorage.setItem('hg_token', data.access_token);
+      document.getElementById('loginOverlay').classList.remove('active');
+      initDashboard();
+    } else {
+      const data = await res.json();
+      err.textContent = data.detail || 'Authentication failed.';
+      err.classList.add('show');
+    }
+  } catch (e) {
+    err.textContent = 'Could not reach server.';
+    err.classList.add('show');
+  }
+  btn.disabled = false; btn.textContent = 'AUTHENTICATE';
+}
+
+function logout() {
+  sessionStorage.removeItem('hg_token');
+  document.getElementById('loginOverlay').classList.add('active');
+  document.getElementById('loginPassword').value = '';
+}
+
+async function checkAuth() {
+  const token = getToken();
+  if (!token) { return; } // overlay already visible
+  const res = await fetch('/patients', { headers: authHeaders() }).catch(() => null);
+  if (res && res.status === 401) {
+    sessionStorage.removeItem('hg_token');
+    return;
+  }
+  document.getElementById('loginOverlay').classList.remove('active');
+  initDashboard();
+}
+
 let patients = {};
 let alertCount = 0;
 let ws = null;
+let vitalsHistory = {};
+let expandedCards = new Set();
+const MAX_HISTORY = 20;
 
-// ── Load patients from registry ──
+// ── Speech Queue ──
+// Alerts queue up and speak one after another.
+// Uses a lock flag + a watchdog timer to guard against
+// onend firing early (a known Chrome SpeechSynthesis bug).
+const speechQueue = [];
+let isSpeaking = false;
+let isMuted = false;
+let speechWatchdog = null;
+let currentUtterance = null;
+let audioUnlocked = false;
+
+// Browsers block SpeechSynthesis until a user gesture has occurred.
+// Fire a silent utterance on first interaction to unlock it.
+function unlockAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  const silent = new SpeechSynthesisUtterance(" ");
+  silent.volume = 0;
+  silent.onend = () => {
+    console.log("[speech] audio context unlocked");
+    if (!isSpeaking && speechQueue.length > 0) processQueue();
+  };
+  speechSynthesis.speak(silent);
+}
+document.addEventListener("click", unlockAudio, { once: true });
+document.addEventListener("keydown", unlockAudio, { once: true });
+
+function toggleMute() {
+  isMuted = !isMuted;
+  const btn = document.getElementById("muteBtn");
+  btn.textContent = isMuted ? "🔇 sound off" : "🔊 sound on";
+  btn.className = isMuted ? "mute-btn muted" : "mute-btn";
+  if (isMuted) {
+    clearTimeout(speechWatchdog);
+    speechSynthesis.cancel();
+    speechQueue.length = 0;
+    isSpeaking = false;
+    currentUtterance = null;
+    updateSpeechIndicator();
+  }
+}
+
+function queueSpeech(text) {
+  // If audio not yet unlocked, store and wait — processQueue runs after unlock
+  if (!audioUnlocked) { speechQueue.push(text); updateSpeechIndicator(); return; }
+  if (isMuted) return;
+  speechQueue.push(text);
+  updateSpeechIndicator();
+  if (!isSpeaking) processQueue();
+}
+
+function processQueue() {
+  if (speechQueue.length === 0 || isMuted) {
+    isSpeaking = false;
+    currentUtterance = null;
+    updateSpeechIndicator();
+    return;
+  }
+
+  isSpeaking = true;
+  const text = speechQueue.shift();
+  updateSpeechIndicator();
+
+  // Cancel anything still running (safety net)
+  speechSynthesis.cancel();
+
+  // Small delay after cancel so the engine is fully ready
+  setTimeout(() => {
+    if (isMuted) { isSpeaking = false; updateSpeechIndicator(); return; }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+    currentUtterance = utterance;
+
+    // Estimate a safe upper-bound duration: ~100ms per word + 1.5s buffer
+    const wordCount = text.split(/\s+/).length;
+    const maxDuration = Math.ceil(wordCount / 0.95) * 450 + 1500;
+
+    // Watchdog: if onend never fires (common Chrome stall bug), advance queue anyway
+    speechWatchdog = setTimeout(() => {
+      if (isSpeaking && currentUtterance === utterance) {
+        console.warn("SpeechSynthesis watchdog triggered — advancing queue");
+        speechSynthesis.cancel();
+        isSpeaking = false;
+        currentUtterance = null;
+        processQueue();
+      }
+    }, maxDuration);
+
+    utterance.onend = () => {
+      if (currentUtterance !== utterance) return; // stale event, ignore
+      clearTimeout(speechWatchdog);
+      isSpeaking = false;
+      currentUtterance = null;
+      // Brief pause between alerts so they don't blur together
+      setTimeout(processQueue, 300);
+    };
+
+    utterance.onerror = (e) => {
+      if (currentUtterance !== utterance) return;
+      console.warn("SpeechSynthesis error:", e.error);
+      clearTimeout(speechWatchdog);
+      isSpeaking = false;
+      currentUtterance = null;
+      setTimeout(processQueue, 300);
+    };
+
+    speechSynthesis.speak(utterance);
+  }, 120);
+}
+
+function updateSpeechIndicator() {
+  const el = document.getElementById("speechIndicator");
+  const label = document.getElementById("speechLabel");
+  if (isSpeaking || speechQueue.length > 0) {
+    el.className = "speech-indicator active";
+    label.textContent = speechQueue.length > 0
+      ? `Speaking... (${speechQueue.length} queued)`
+      : "Speaking...";
+  } else {
+    el.className = "speech-indicator";
+  }
+}
+
+// ── Clock ──
+function updateClock() {
+  document.getElementById("clock").textContent = new Date().toLocaleTimeString();
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── Load patients ──
 async function loadPatients() {
   try {
-    const res = await fetch("http://localhost:8000/patients");
+    const res = await fetch("http://localhost:8000/patients", { headers: authHeaders() });
     const list = await res.json();
     list.forEach(p => {
       if (!patients[p.id]) {
         patients[p.id] = { name: p.name, age: p.age, condition: p.condition, ward: p.ward || "", vitals: null, riskLevel: "LOW", lastUpdate: null };
       }
     });
-    // Remove patients no longer in registry
     const ids = new Set(list.map(p => p.id));
     Object.keys(patients).forEach(id => { if (!ids.has(id)) delete patients[id]; });
     renderPatients();
@@ -505,13 +577,33 @@ async function loadPatients() {
   }
 }
 
-// ── Clock ──
-function updateClock() {
-  const now = new Date();
-  document.getElementById("clock").textContent = now.toLocaleTimeString();
+// ── Sparkline ──
+function sparkline(values, dangerFn) {
+  if (!values || values.length < 2) {
+    return `<div class="sparkline-collecting">Collecting data...</div>`;
+  }
+  const W = 200, H = 40, pad = 3;
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const points = values.map((v, i) => {
+    const x = pad + (i / (values.length - 1)) * (W - pad * 2);
+    const y = H - pad - ((v - min) / range) * (H - pad * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  const lastVal = values[values.length - 1];
+  const dotColor = dangerFn(lastVal);
+  const lastX = (W - pad).toFixed(1);
+  const lastY = (H - pad - ((lastVal - min) / range) * (H - pad * 2)).toFixed(1);
+  return `
+    <svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <polyline points="${points}" fill="none" stroke="#00d4ff" stroke-width="1.5"
+        stroke-linejoin="round" stroke-linecap="round" opacity="0.6"/>
+      <circle cx="${lastX}" cy="${lastY}" r="3" fill="${dotColor}"
+        style="filter:drop-shadow(0 0 3px ${dotColor})"/>
+    </svg>
+  `;
 }
-setInterval(updateClock, 1000);
-updateClock();
 
 // ── Render patient cards ──
 function renderPatients() {
@@ -520,9 +612,16 @@ function renderPatients() {
     const v = p.vitals;
     const riskClass = p.riskLevel === "CRITICAL" ? "critical" : p.riskLevel === "HIGH" ? "high" : p.riskLevel === "MODERATE" ? "warning" : "";
     const ts = p.lastUpdate ? new Date(p.lastUpdate).toLocaleTimeString() : "Waiting...";
+    const history = vitalsHistory[id] || [];
+    const isOpen = expandedCards.has(id);
+
+    const hrSpark   = sparkline(history.map(h => h.heart_rate_bpm), v => v > 130 ? '#ff3333' : v > 100 ? '#ffd60a' : '#00ff88');
+    const spo2Spark = sparkline(history.map(h => h.spo2_percent),   v => v < 85  ? '#ff3333' : v < 92  ? '#ffd60a' : '#00ff88');
+    const bpSpark   = sparkline(history.map(h => h.blood_pressure), v => v > 180 ? '#ff3333' : v > 140 ? '#ffd60a' : '#00ff88');
+    const tempSpark = sparkline(history.map(h => h.temperature_f),  v => v > 103 ? '#ff3333' : v > 100 ? '#ffd60a' : '#00ff88');
 
     return `
-      <div class="patient-card ${riskClass}" id="card-${id}">
+      <div class="patient-card ${riskClass}" id="card-${id}" onclick="toggleSparklines('${id}')">
         <div class="card-header">
           <div class="patient-info">
             <h3>${p.name}</h3>
@@ -556,27 +655,31 @@ function renderPatients() {
             <div class="vital-value" style="color: ${p.riskLevel === 'CRITICAL' ? 'var(--red)' : p.riskLevel === 'HIGH' ? 'var(--orange)' : 'var(--green)'}">${p.riskLevel}</div>
           </div>
         </div>
+        <div class="expand-hint">${isOpen ? '▲ hide trends' : '▼ view trends'}</div>
+        <div class="sparkline-panel ${isOpen ? 'open' : ''}" id="spark-${id}">
+          <div class="sparkline-block"><div class="sparkline-label">Heart Rate</div>${hrSpark}</div>
+          <div class="sparkline-block"><div class="sparkline-label">SpO2</div>${spo2Spark}</div>
+          <div class="sparkline-block"><div class="sparkline-label">BP (Systolic)</div>${bpSpark}</div>
+          <div class="sparkline-block"><div class="sparkline-label">Temperature</div>${tempSpark}</div>
+        </div>
         <div class="card-timestamp">Last update: ${ts}</div>
       </div>
     `;
   }).join('');
 }
 
-// ── Speak alert using browser TTS ──
-function speakAlert(data) {
-  if (!window.speechSynthesis) return;
-  const msg = `Alert for ${data.patient_name}. ${data.summary} ${data.recommended_action}`;
-  const utterance = new SpeechSynthesisUtterance(msg);
-  utterance.rate = 0.95;
-  utterance.pitch = 1.0;
-  window.speechSynthesis.cancel(); // stop any current speech
-  window.speechSynthesis.speak(utterance);
+function toggleSparklines(id) {
+  if (expandedCards.has(id)) expandedCards.delete(id);
+  else expandedCards.add(id);
+  renderPatients();
 }
 
 // ── Add alert to feed ──
 function addAlert(data) {
-  alertCount++;
-  document.getElementById("alertCount").textContent = `${alertCount} alert${alertCount > 1 ? 's' : ''}`;
+  if (!data.historical) {
+    alertCount++;
+    document.getElementById("alertCount").textContent = `${alertCount} alert${alertCount > 1 ? 's' : ''}`;
+  }
 
   const list = document.getElementById("alertsList");
   const empty = list.querySelector(".empty-alerts");
@@ -585,6 +688,8 @@ function addAlert(data) {
   const time = new Date(data.timestamp).toLocaleTimeString();
   const item = document.createElement("div");
   item.className = "alert-item";
+  if (data.historical) { item.style.opacity = '0.55'; }
+
   item.innerHTML = `
     <div class="alert-level-indicator ${data.risk_level}"></div>
     <div class="alert-body">
@@ -592,10 +697,39 @@ function addAlert(data) {
       <div class="alert-summary">${data.summary}</div>
       <div class="alert-action">→ ${data.recommended_action}</div>
     </div>
-    <div class="alert-time">${time}</div>
+    <div class="alert-time">${time}${data.historical ? ' · historical' : ''}</div>
   `;
-  list.insertBefore(item, list.firstChild);
+
+  if (data.historical) list.appendChild(item);
+  else list.insertBefore(item, list.firstChild);
 }
+
+// ── Load alert history ──
+async function loadAlertHistory() {
+  try {
+    const res = await fetch('/alerts/history?limit=50', { headers: authHeaders() });
+    const data = await res.json();
+    if (!data.alerts || data.alerts.length === 0) return;
+    const list = document.getElementById("alertsList");
+    const divider = document.createElement('div');
+    divider.style.cssText = 'text-align:center; color:#555; font-size:11px; padding:8px 0; border-top:1px solid #1e2a38; font-family: var(--font-mono);';
+    divider.textContent = '── past 24h ──';
+    list.appendChild(divider);
+    data.alerts.forEach(alert => addAlert(alert));
+  } catch (e) {
+    console.warn('Could not load alert history:', e);
+  }
+}
+
+// initDashboard is called after successful login / token validation
+function initDashboard() {
+  loadAlertHistory();
+  loadPatients();
+  setInterval(loadPatients, 10000);
+  connect();
+}
+
+window.addEventListener('DOMContentLoaded', checkAuth);
 
 // ── WebSocket ──
 function connect() {
@@ -618,6 +752,14 @@ function connect() {
       if (patients[data.patient_id].riskLevel !== "CRITICAL") {
         patients[data.patient_id].riskLevel = "LOW";
       }
+      if (!vitalsHistory[data.patient_id]) vitalsHistory[data.patient_id] = [];
+      vitalsHistory[data.patient_id].push({
+        heart_rate_bpm: data.vitals.heart_rate_bpm,
+        spo2_percent:   data.vitals.spo2_percent,
+        blood_pressure: parseInt(data.vitals.blood_pressure),
+        temperature_f:  data.vitals.temperature_f,
+      });
+      if (vitalsHistory[data.patient_id].length > MAX_HISTORY) vitalsHistory[data.patient_id].shift();
       renderPatients();
     }
 
@@ -627,7 +769,13 @@ function connect() {
       patients[data.patient_id].lastUpdate = data.timestamp;
       renderPatients();
       addAlert(data);
-      speakAlert(data);
+
+      // ── Queue speech — never cuts off previous alert ──
+      if (!data.historical) {
+        queueSpeech(
+          `Alert for ${data.patient_name}. ${data.summary} Recommended action: ${data.recommended_action}`
+        );
+      }
     }
   };
 
@@ -641,10 +789,6 @@ function connect() {
   ws.onerror = () => ws.close();
 }
 
-// ── Init ──
-loadPatients();
-setInterval(loadPatients, 10000); // Refresh registry every 10s
-connect();
 </script>
 </body>
 </html>

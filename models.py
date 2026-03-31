@@ -32,7 +32,7 @@ class VitalEvent(BaseModel):
 
 # ──────────────────────────────────────────────
 # Model 3: RiskReport
-# What Gemini returns after analyzing a VitalEvent
+# What Groq returns after analyzing a VitalEvent
 # This gets logged to Datadog and spoken by ElevenLabs
 # ──────────────────────────────────────────────
 class RiskReport(BaseModel):

@@ -8,3 +8,5 @@ pydantic
 python-dotenv
 aiofiles
 python-multipart
+python-jose[cryptography]
+passlib

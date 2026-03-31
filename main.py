@@ -1,19 +1,31 @@
 import json
 import threading
 import os
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from contextlib import asynccontextmanager
 from typing import List
 from models import RiskReport
 from pydantic import BaseModel as PydanticBase
+from auth import (
+    authenticate_user, create_access_token, require_caregiver, setup_default_users, pwd_context
+)
 import asyncio
+import httpx
 
 # ──────────────────────────────────────────────
 # Patient Registry
 # ──────────────────────────────────────────────
 PATIENTS_FILE = "patients.json"
+from dotenv import load_dotenv
+load_dotenv()
+
+DATADOG_APP_KEY = os.getenv("DATADOG_APP_KEY")
+DATADOG_API_KEY = os.getenv("DATADOG_API_KEY")
+DATADOG_SITE = os.getenv("DATADOG_SITE", "datadoghq.com")
 
 def load_patients() -> list:
     if not os.path.exists(PATIENTS_FILE):
@@ -69,7 +81,7 @@ manager = ConnectionManager()
 def run_consumer():
     from kafka import KafkaConsumer
     from models import VitalEvent
-    from gemini_brain import analyze_vitals
+    from groq_brain import analyze_vitals
     from datadog_logger import log_risk_report
     import time
 
@@ -136,6 +148,7 @@ def run_consumer():
 # ──────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    setup_default_users()
     t = threading.Thread(target=run_consumer, daemon=True)
     t.start()
     print("[MAIN] 🚀 HealthGuard Brain started")
@@ -155,6 +168,42 @@ app.mount("/static", StaticFiles(directory="frontend"), name="static")
 # ──────────────────────────────────────────────
 # Endpoints
 # ──────────────────────────────────────────────
+@app.post("/login")
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = authenticate_user(form_data.username, form_data.password)
+    if not user:
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    token = create_access_token({"sub": user["username"], "role": user["role"]})
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "role": user["role"],
+        "full_name": user.get("full_name", ""),
+    }
+
+
+class PatientLoginRequest(PydanticBase):
+    patient_id: str
+    pin: str
+
+@app.post("/patient-login")
+def patient_login(req: PatientLoginRequest):
+    from fastapi import HTTPException, status
+    patients = load_patients()
+    patient = next((p for p in patients if p["id"] == req.patient_id), None)
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    if "pin_hash" in patient and not pwd_context.verify(req.pin, patient["pin_hash"]):
+        raise HTTPException(status_code=401, detail="Incorrect PIN")
+    token = create_access_token({"sub": patient["id"], "role": "patient", "name": patient["name"]})
+    return {"access_token": token, "token_type": "bearer", "patient_name": patient["name"]}
+
+
 @app.get("/")
 def root():
     return {"service": "HealthGuard Brain", "status": "running", "connected_clients": len(manager.active_connections)}
@@ -163,8 +212,16 @@ def root():
 def health():
     return {"status": "ok"}
 
+@app.get("/patients/public")
+def get_patients_public():
+    """Returns minimal patient info for the patient-facing dropdown."""
+    return [
+        {"id": p["id"], "name": p["name"], "has_pin": "pin_hash" in p}
+        for p in load_patients()
+    ]
+
 @app.get("/patients")
-def get_patients():
+def get_patients(_: dict = Depends(require_caregiver)):
     return load_patients()
 
 class RegisterRequest(PydanticBase):
@@ -172,9 +229,10 @@ class RegisterRequest(PydanticBase):
     age: int
     condition: str
     ward: str = ""
+    pin: str = ""   # optional 4-digit PIN for patient login
 
 @app.post("/register")
-def register_patient(req: RegisterRequest):
+def register_patient(req: RegisterRequest, _: dict = Depends(require_caregiver)):
     patients = load_patients()
     new_id = generate_patient_id(patients)
     patient = {
@@ -183,6 +241,7 @@ def register_patient(req: RegisterRequest):
         "age": req.age,
         "condition": req.condition,
         "ward": req.ward,
+        **({"pin_hash": pwd_context.hash(req.pin)} if req.pin.strip() else {}),
         "baselines": {
             "heart_rate": 80,
             "systolic_bp": 130,
@@ -198,7 +257,7 @@ def register_patient(req: RegisterRequest):
     return {"success": True, "patient_id": new_id, "patient": patient}
 
 @app.delete("/patients/{patient_id}")
-def remove_patient(patient_id: str):
+def remove_patient(patient_id: str, _: dict = Depends(require_caregiver)):
     patients = load_patients()
     patients = [p for p in patients if p["id"] != patient_id]
     save_patients(patients)
@@ -225,6 +284,14 @@ async def websocket_endpoint(websocket: WebSocket):
 class AskRequest(PydanticBase):
     question: str
     context: str = ""
+    patient_id: str = ""
+    language: str = "en-US"
+    history: str = ""   # formatted string of recent Q&A pairs
+
+_LANGUAGE_NAMES = {
+    "en-US": "English", "es-ES": "Spanish", "fr-FR": "French",
+    "hi-IN": "Hindi",   "ar-SA": "Arabic",
+}
 
 @app.post("/ask")
 def ask(req: AskRequest):
@@ -232,18 +299,89 @@ def ask(req: AskRequest):
     from dotenv import load_dotenv
     load_dotenv()
 
+    # Build patient-specific prefix
+    patient_prefix = ""
+    if req.patient_id:
+        patients = load_patients()
+        p = next((x for x in patients if x["id"] == req.patient_id), None)
+        if p:
+            first_name = p["name"].split()[0]
+            patient_prefix = (
+                f"You are speaking to {first_name}, age {p['age']}, "
+                f"who has {p['condition']}. Address them by first name. "
+            )
+
+    lang_name = _LANGUAGE_NAMES.get(req.language, "English")
+    system_prompt = (
+        f"{patient_prefix}"
+        f"You are a friendly health assistant speaking to an elderly patient. "
+        f"Always respond in {lang_name}. "
+        "Use simple, warm, reassuring language. Keep it to 2-3 sentences. "
+        "Never use medical jargon. Never diagnose. Be calm and supportive."
+    )
+
+    user_content = ""
+    if req.history:
+        user_content += f"Recent conversation:\n{req.history}\n\n"
+    user_content += f"Current vitals: {req.context}\nQuestion: {req.question}"
+
     client = Groq(api_key=os.getenv("GROQ_API_KEY"))
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
-            {"role": "system", "content": (
-                "You are a friendly health assistant speaking to an elderly patient. "
-                "Respond in simple, warm, reassuring language. Keep it to 2-3 sentences. "
-                "Never use medical jargon. Never diagnose. Be calm and supportive."
-            )},
-            {"role": "user", "content": f"Patient vitals context: {req.context}\nQuestion: {req.question}"}
+            {"role": "system", "content": system_prompt},
+            {"role": "user",   "content": user_content},
         ],
         temperature=0.7,
         max_tokens=150,
     )
     return {"answer": response.choices[0].message.content.strip()}
+
+
+@app.get("/alerts/history")
+async def get_alert_history(limit: int = 50, _: dict = Depends(require_caregiver)):
+    url = f"https://api.{DATADOG_SITE}/api/v2/logs/events/search"
+
+    headers = {
+        "DD-API-KEY": DATADOG_API_KEY,
+        "DD-APPLICATION-KEY": DATADOG_APP_KEY,
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "filter": {
+            "query": "service:healthguard-ai",  # matches your logger exactly
+            "from": "now-24h",
+            "to": "now"
+        },
+        "sort": "-timestamp",
+        "page": {"limit": limit}
+    }
+
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.post(url, headers=headers, json=payload)
+            res.raise_for_status()
+            data = res.json()
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+    alerts = []
+    for log in data.get("data", []):
+        attrs = log.get("attributes", {})
+        fields = attrs.get("attributes", {})  # your flat fields land here
+
+        alerts.append({
+            "type": "alert",
+            "patient_id": fields.get("patient_id", "unknown"),
+            "patient_name": fields.get("patient_name", "Unknown"),
+            "risk_level": fields.get("risk_level", "UNKNOWN"),
+            "risk_score": fields.get("risk_score", 0),
+            "summary": fields.get("summary", ""),
+            "recommended_action": fields.get("recommended_action", ""),
+            "anomaly_type": fields.get("anomaly_type", ""),
+            "timestamp": attrs.get("timestamp", ""),
+            "historical": True
+        })
+
+    return {"alerts": alerts}
