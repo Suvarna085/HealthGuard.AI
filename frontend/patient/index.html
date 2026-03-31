@@ -434,6 +434,12 @@ let voiceTimeout     = null;
 const conversationHistory = [];  // { q, a } — last 3 pairs
 const MAX_HISTORY    = 3;
 
+function getPatientToken() { return sessionStorage.getItem('hg_patient_token'); }
+function patientAuthHeaders() {
+  const t = getPatientToken();
+  return t ? { 'Authorization': `Bearer ${t}` } : {};
+}
+
 // ────────────────────────────────────────────
 // Language
 // ────────────────────────────────────────────
@@ -487,7 +493,18 @@ async function startApp() {
     updatePinDots();
     document.getElementById("pinError").textContent = "";
   } else {
-    // No PIN — go straight to app
+    // No PIN — get a token with empty pin, then enter app
+    try {
+      const res = await fetch("http://localhost:8000/patient-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ patient_id: MY_PATIENT_ID, pin: "" }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        sessionStorage.setItem('hg_patient_token', data.access_token);
+      }
+    } catch (e) { console.warn("Could not obtain patient token", e); }
     enterApp();
   }
 }
@@ -530,6 +547,8 @@ async function submitPIN() {
       body: JSON.stringify({ patient_id: MY_PATIENT_ID, pin: pinBuffer }),
     });
     if (res.ok) {
+      const data = await res.json();
+      sessionStorage.setItem('hg_patient_token', data.access_token);
       document.getElementById("pinScreen").classList.remove("visible");
       enterApp();
     } else {
@@ -572,6 +591,7 @@ function switchPatient() {
   MY_PATIENT_ID = null;
   myVitals = null;
   conversationHistory.length = 0;
+  sessionStorage.removeItem('hg_patient_token');
   document.getElementById("selectorScreen").style.display = "block";
   document.getElementById("appScreen").classList.remove("visible");
   document.getElementById("patientSelect").value = "";
@@ -647,7 +667,7 @@ async function askQuestion(question) {
   try {
     const res = await fetch("http://localhost:8000/ask", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...patientAuthHeaders() },
       body: JSON.stringify({
         question,
         context:    buildContext(),

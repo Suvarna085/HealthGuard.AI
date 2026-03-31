@@ -59,12 +59,19 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
+        sub: str = payload.get("sub")
+        role: str = payload.get("role", "")
+        if sub is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    user = get_user(username)
+
+    if role == "patient":
+        # Patient tokens carry patient_id as sub — no users.json lookup needed
+        return {"sub": sub, "role": "patient", "name": payload.get("name", "")}
+
+    # Caregiver tokens — verify against users.json
+    user = get_user(sub)
     if user is None:
         raise credentials_exception
     return user
@@ -75,6 +82,15 @@ async def require_caregiver(current_user: dict = Depends(get_current_user)) -> d
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Caregiver access required",
+        )
+    return current_user
+
+
+async def require_patient_or_caregiver(current_user: dict = Depends(get_current_user)) -> dict:
+    if current_user.get("role") not in ("patient", "caregiver"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Authentication required",
         )
     return current_user
 

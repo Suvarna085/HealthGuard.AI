@@ -11,7 +11,9 @@ from typing import List
 from models import RiskReport
 from pydantic import BaseModel as PydanticBase
 from auth import (
-    authenticate_user, create_access_token, require_caregiver, setup_default_users, pwd_context
+    authenticate_user, create_access_token,
+    require_caregiver, require_patient_or_caregiver,
+    setup_default_users, pwd_context
 )
 import asyncio
 import httpx
@@ -294,10 +296,15 @@ _LANGUAGE_NAMES = {
 }
 
 @app.post("/ask")
-def ask(req: AskRequest):
+def ask(req: AskRequest, current_user: dict = Depends(require_patient_or_caregiver)):
     from groq import Groq
     from dotenv import load_dotenv
     load_dotenv()
+
+    # Patients can only ask about their own data
+    if current_user.get("role") == "patient" and req.patient_id and req.patient_id != current_user.get("sub"):
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="You can only ask about your own health data")
 
     # Build patient-specific prefix
     patient_prefix = ""
