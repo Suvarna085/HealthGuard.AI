@@ -65,6 +65,57 @@
   .register-another { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 10px 24px; border-radius: 8px; cursor: pointer; font-family: var(--font-sans); font-size: 14px; transition: all 0.2s; }
   .register-another:hover { border-color: var(--accent); color: var(--accent); }
 
+  /* Caregiver section */
+  .section-divider { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+  .caregiver-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 24px; }
+  .caregiver-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .caregiver-title { font-family: var(--font-mono); font-size: 12px; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; }
+  .add-caregiver-btn {
+    background: rgba(0,212,255,0.08); border: 1px solid rgba(0,212,255,0.3);
+    color: var(--accent); padding: 5px 14px; border-radius: 6px;
+    font-size: 12px; font-family: var(--font-mono); cursor: pointer; transition: all 0.2s;
+  }
+  .add-caregiver-btn:hover { background: rgba(0,212,255,0.15); }
+
+  .add-caregiver-form {
+    display: none; padding: 20px; border-bottom: 1px solid var(--border);
+    background: rgba(0,212,255,0.02);
+  }
+  .add-caregiver-form.open { display: block; }
+  .cg-form-row { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: end; }
+  .cg-field label { display: block; font-size: 11px; color: var(--muted); font-family: var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+  .cg-field input {
+    width: 100%; padding: 10px 14px;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-size: 14px;
+    font-family: var(--font-sans); transition: border-color 0.2s;
+  }
+  .cg-field input:focus { outline: none; border-color: var(--accent); }
+  .cg-field input::placeholder { color: var(--muted); }
+  .cg-submit-btn {
+    padding: 10px 20px; background: var(--accent); color: #0a0e14;
+    font-size: 13px; font-weight: 600; font-family: var(--font-mono);
+    border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; transition: opacity 0.2s;
+  }
+  .cg-submit-btn:hover { opacity: 0.88; }
+  .cg-submit-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .cg-error { color: var(--red); font-size: 12px; font-family: var(--font-mono); margin-top: 10px; display: none; }
+  .cg-error.show { display: block; }
+
+  .caregiver-row {
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .caregiver-row:last-child { border-bottom: none; }
+  .cg-row-info { display: flex; align-items: center; gap: 12px; }
+  .cg-badge { font-family: var(--font-mono); font-size: 11px; color: var(--accent); background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.2); border-radius: 4px; padding: 2px 8px; }
+  .cg-name { font-size: 14px; font-weight: 500; color: var(--text); }
+  .cg-username { font-size: 12px; color: var(--muted); }
+  .cg-remove-btn { background: transparent; border: 1px solid rgba(255,51,51,0.3); color: var(--red); padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-family: var(--font-mono); transition: all 0.2s; }
+  .cg-remove-btn:hover { background: rgba(255,51,51,0.1); }
+  .empty-caregivers { padding: 24px; text-align: center; color: var(--muted); font-family: var(--font-mono); font-size: 12px; }
+
   /* Active patients list */
   .patients-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
   .patients-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
@@ -213,6 +264,38 @@
     <button class="register-another" onclick="resetForm()">Register Another Patient</button>
   </div>
 
+  <!-- Caregiver Management -->
+  <div class="caregiver-card">
+    <div class="caregiver-header">
+      <div class="caregiver-title">👤 Caregiver Accounts</div>
+      <button class="add-caregiver-btn" onclick="toggleAddCaregiver()">+ Add Caregiver</button>
+    </div>
+
+    <div class="add-caregiver-form" id="addCaregiverForm">
+      <div class="cg-form-row">
+        <div class="cg-field">
+          <label>Username</label>
+          <input type="text" id="cgUsername" placeholder="e.g. nurse_jane" autocomplete="off">
+        </div>
+        <div class="cg-field">
+          <label>Full Name</label>
+          <input type="text" id="cgFullName" placeholder="e.g. Jane Smith">
+        </div>
+        <div class="cg-field">
+          <label>Password</label>
+          <input type="password" id="cgPassword" placeholder="min. 6 characters"
+            onkeydown="if(event.key==='Enter') addCaregiver()">
+        </div>
+        <button class="cg-submit-btn" id="cgSubmitBtn" onclick="addCaregiver()">ADD</button>
+      </div>
+      <div class="cg-error" id="cgError"></div>
+    </div>
+
+    <div id="caregiversList">
+      <div class="empty-caregivers">Loading...</div>
+    </div>
+  </div>
+
   <!-- Active Patients -->
   <div class="patients-card">
     <div class="patients-header">
@@ -259,6 +342,7 @@ async function doLogin() {
       sessionStorage.setItem('hg_token', data.access_token);
       document.getElementById('loginOverlay').classList.remove('active');
       loadPatients();
+      loadCaregivers();
     } else {
       const data = await res.json();
       err.textContent = data.detail || 'Authentication failed.';
@@ -281,6 +365,7 @@ async function checkAuth() {
   }
   document.getElementById('loginOverlay').classList.remove('active');
   loadPatients();
+  loadCaregivers();
 }
 
 window.addEventListener('DOMContentLoaded', checkAuth);
@@ -372,6 +457,88 @@ async function loadPatients() {
 
 // Refresh patient list every 10s
 setInterval(loadPatients, 10000);
+
+// ── Caregiver Management ──
+function toggleAddCaregiver() {
+  const form = document.getElementById('addCaregiverForm');
+  form.classList.toggle('open');
+  if (form.classList.contains('open')) {
+    document.getElementById('cgUsername').focus();
+  }
+}
+
+async function addCaregiver() {
+  const username  = document.getElementById('cgUsername').value.trim();
+  const fullName  = document.getElementById('cgFullName').value.trim();
+  const password  = document.getElementById('cgPassword').value;
+  const err       = document.getElementById('cgError');
+  const btn       = document.getElementById('cgSubmitBtn');
+
+  err.classList.remove('show');
+  if (!username || !password) {
+    err.textContent = 'Username and password are required.';
+    err.classList.add('show'); return;
+  }
+
+  btn.disabled = true; btn.textContent = 'ADDING...';
+  try {
+    const res = await fetch('/caregivers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ username, password, full_name: fullName }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      err.textContent = data.detail || 'Failed to add caregiver.';
+      err.classList.add('show');
+    } else {
+      document.getElementById('cgUsername').value  = '';
+      document.getElementById('cgFullName').value  = '';
+      document.getElementById('cgPassword').value  = '';
+      document.getElementById('addCaregiverForm').classList.remove('open');
+      loadCaregivers();
+    }
+  } catch (e) {
+    err.textContent = 'Could not connect to server.';
+    err.classList.add('show');
+  }
+  btn.disabled = false; btn.textContent = 'ADD';
+}
+
+async function removeCaregiver(username) {
+  if (!confirm(`Remove caregiver "${username}"? They will lose access immediately.`)) return;
+  const res = await fetch(`/caregivers/${username}`, { method: 'DELETE', headers: authHeaders() });
+  const data = await res.json();
+  if (!res.ok) { alert(data.detail || 'Could not remove caregiver.'); return; }
+  loadCaregivers();
+}
+
+async function loadCaregivers() {
+  try {
+    const res = await fetch('/caregivers', { headers: authHeaders() });
+    const caregivers = await res.json();
+    const list = document.getElementById('caregiversList');
+    if (caregivers.length === 0) {
+      list.innerHTML = '<div class="empty-caregivers">No caregiver accounts found.</div>';
+      return;
+    }
+    list.innerHTML = caregivers.map(c => `
+      <div class="caregiver-row">
+        <div class="cg-row-info">
+          <span class="cg-badge">CAREGIVER</span>
+          <div>
+            <div class="cg-name">${c.full_name || c.username}</div>
+            <div class="cg-username">@${c.username}</div>
+          </div>
+        </div>
+        <button class="cg-remove-btn" onclick="removeCaregiver('${c.username}')">Remove</button>
+      </div>
+    `).join('');
+  } catch (e) {
+    document.getElementById('caregiversList').innerHTML =
+      '<div class="empty-caregivers">Could not load caregivers.</div>';
+  }
+}
 </script>
 </body>
 </html>

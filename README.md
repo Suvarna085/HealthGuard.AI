@@ -34,7 +34,7 @@ Uses **Groq's Llama 3.3-70B** to:
 
 ### Voice Interaction
 Patients ask health questions by voice. The assistant:
-- Recognizes speech in 5 languages (English, Spanish, French, Hindi, Arabic)
+- Recognizes speech in 4 languages (English, Spanish, French, Hindi)
 - Shows a live partial transcript while the patient is speaking
 - Retries automatically on silence
 - Responds with **ElevenLabs** voice synthesis (falls back to browser TTS)
@@ -42,15 +42,14 @@ Patients ask health questions by voice. The assistant:
 ### Multilingual Support
 The patient interface supports:
 
-| Language | Code | Flag |
-|----------|------|------|
-| English  | en-US | 🇺🇸 |
-| Spanish  | es-ES | 🇪🇸 |
-| French   | fr-FR | 🇫🇷 |
-| Hindi    | hi-IN | 🇮🇳 |
-| Arabic   | ar-SA | 🇸🇦 |
+| Language | Code  | Flag |
+|----------|-------|------|
+| English  | en-US | 🇺🇸  |
+| Spanish  | es-ES | 🇪🇸  |
+| French   | fr-FR | 🇫🇷  |
+| Hindi    | hi-IN | 🇮🇳  |
 
-All UI text, voice recognition, and AI responses adapt to the selected language. Arabic switches the layout to RTL.
+All UI text, voice recognition, and AI responses adapt to the selected language. The selected language is persisted across sessions via `localStorage`.
 
 ### Personalized AI Responses
 The AI assistant is personalized per patient:
@@ -74,6 +73,14 @@ A default caregiver account is created on first run:
 - **Password:** `admin123`
 
 > Change the default password before deploying to production.
+
+### Caregiver Management
+Admins can manage caregiver accounts directly from the Registration page:
+- View all existing caregiver accounts
+- Add new caregivers (username, full name, password)
+- Remove caregivers (self-deletion is blocked)
+
+New caregivers can log in immediately after being added.
 
 ### Caregiver Dashboard
 - Live patient cards with vitals, risk badges, and sparkline trend charts
@@ -119,7 +126,7 @@ healthguard/
 └── frontend/
     ├── patient/           # Patient voice interface (multilingual, PIN auth)
     ├── caregiver/         # Caregiver monitoring dashboard (login required)
-    └── register/          # Patient registration page (login required)
+    └── register/          # Patient & caregiver registration (login required)
 ```
 
 ---
@@ -134,8 +141,8 @@ healthguard/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/healthguard.git
-cd healthguard
+git clone https://github.com/Suvarna085/HealthGuard.AI.git
+cd HealthGuard.AI
 ```
 
 ### 2. Set up environment variables
@@ -150,7 +157,6 @@ Fill in the following in `.env`:
 |----------|-------------|
 | `GROQ_API_KEY` | From [Groq Console](https://console.groq.com) |
 | `ELEVENLABS_API_KEY` | From [ElevenLabs](https://elevenlabs.io) |
-| `ELEVENLABS_VOICE_ID` | Voice ID for patient TTS |
 | `DATADOG_API_KEY` | From Datadog |
 | `DATADOG_APP_KEY` | From Datadog |
 | `DATADOG_SITE` | e.g. `datadoghq.com` |
@@ -198,7 +204,7 @@ python simulator.py
 |-----------|-----|
 | Caregiver Dashboard | http://localhost:8000/static/caregiver/index.html |
 | Patient Interface | http://localhost:8000/static/patient/index.html |
-| Patient Registration | http://localhost:8000/static/register/index.html |
+| Patient & Caregiver Registration | http://localhost:8000/static/register/index.html |
 | API Docs | http://localhost:8000/docs |
 
 ---
@@ -210,19 +216,25 @@ python simulator.py
 2. Fill in name, age, condition, ward, and an optional 4-digit PIN
 3. The patient appears in the simulator and dashboards within ~5 seconds
 
-### 2. Monitor Vitals
+### 2. Add a Caregiver
+1. Open the **Registration page** and log in
+2. Scroll to the **Caregiver Accounts** section
+3. Click **+ Add Caregiver**, fill in username, full name, and password
+4. The new caregiver can log in immediately
+
+### 3. Monitor Vitals
 The simulator sends vitals to Kafka every 2 seconds per patient. The backend processes them, runs AI analysis on anomalies, and broadcasts updates to all connected dashboards via WebSocket.
 
-### 3. Patient Voice Interface
+### 4. Patient Voice Interface
 1. Open the **Patient Interface**
-2. Select a language using the flag buttons
+2. Select a language using the flag buttons (preference is saved automatically)
 3. Select your name from the dropdown and enter your PIN (if set)
 4. Tap the microphone button and ask a question:
    > "How am I doing today?"
    > "Is my heart rate normal?"
 5. The AI responds with a personalized, spoken answer
 
-### 4. Caregiver Dashboard
+### 5. Caregiver Dashboard
 1. Open the **Caregiver Dashboard** and log in
 2. View all active patients with live vitals and risk badges
 3. Click a patient card to expand sparkline trend charts
@@ -240,7 +252,10 @@ The simulator sends vitals to Kafka every 2 seconds per patient. The backend pro
 | `GET` | `/patients/public` | — | Patient names for dropdown |
 | `POST` | `/register` | Caregiver | Register new patient |
 | `DELETE` | `/patients/{id}` | Caregiver | Remove patient |
-| `POST` | `/ask` | — | Patient voice Q&A |
+| `GET` | `/caregivers` | Caregiver | List all caregiver accounts |
+| `POST` | `/caregivers` | Caregiver | Add a new caregiver account |
+| `DELETE` | `/caregivers/{username}` | Caregiver | Remove a caregiver account |
+| `POST` | `/ask` | Patient/Caregiver | Patient voice Q&A |
 | `GET` | `/alerts/history` | Caregiver | Past 24h alerts from Datadog |
 | `WS` | `/ws` | — | Real-time vitals and alerts |
 
@@ -251,7 +266,7 @@ The simulator sends vitals to Kafka every 2 seconds per patient. The backend pro
 | Layer | Technology |
 |-------|-----------|
 | Backend | FastAPI, Python, asyncio |
-| Auth | JWT (python-jose), bcrypt/sha256 (passlib) |
+| Auth | JWT (python-jose), sha256 (passlib) |
 | Messaging | Apache Kafka (kafka-python-ng) |
 | AI | Groq — Llama 3.3-70B |
 | Voice (TTS) | ElevenLabs, Web Speech API (fallback) |

@@ -268,6 +268,59 @@ def remove_patient(patient_id: str, _: dict = Depends(require_caregiver)):
 
 
 # ──────────────────────────────────────────────
+# Caregiver Management
+# ──────────────────────────────────────────────
+class CaregiverRegisterRequest(PydanticBase):
+    username: str
+    password: str
+    full_name: str = ""
+
+@app.get("/caregivers")
+def list_caregivers(_: dict = Depends(require_caregiver)):
+    from auth import load_users
+    return [
+        {"username": u["username"], "full_name": u.get("full_name", "")}
+        for u in load_users()
+        if u.get("role") == "caregiver"
+    ]
+
+@app.post("/caregivers")
+def register_caregiver(req: CaregiverRegisterRequest, _: dict = Depends(require_caregiver)):
+    from fastapi import HTTPException
+    from auth import load_users, save_users
+    if len(req.username) < 3:
+        raise HTTPException(status_code=400, detail="Username must be at least 3 characters")
+    if len(req.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    users = load_users()
+    if any(u["username"] == req.username for u in users):
+        raise HTTPException(status_code=400, detail="Username already exists")
+    users.append({
+        "username": req.username,
+        "hashed_password": pwd_context.hash(req.password),
+        "role": "caregiver",
+        "full_name": req.full_name,
+    })
+    save_users(users)
+    print(f"[AUTH] ✅ New caregiver registered: {req.username}")
+    return {"success": True, "username": req.username}
+
+@app.delete("/caregivers/{username}")
+def remove_caregiver(username: str, current_user: dict = Depends(require_caregiver)):
+    from fastapi import HTTPException
+    from auth import load_users, save_users
+    if username == current_user.get("username"):
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+    users = load_users()
+    if not any(u["username"] == username for u in users):
+        raise HTTPException(status_code=404, detail="Caregiver not found")
+    users = [u for u in users if u["username"] != username]
+    save_users(users)
+    print(f"[AUTH] 🗑️  Removed caregiver: {username}")
+    return {"success": True}
+
+
+# ──────────────────────────────────────────────
 # WebSocket
 # ──────────────────────────────────────────────
 @app.websocket("/ws")
@@ -292,7 +345,7 @@ class AskRequest(PydanticBase):
 
 _LANGUAGE_NAMES = {
     "en-US": "English", "es-ES": "Spanish", "fr-FR": "French",
-    "hi-IN": "Hindi",   "ar-SA": "Arabic",
+    "hi-IN": "Hindi",
 }
 
 @app.post("/ask")

@@ -119,8 +119,7 @@
       <button class="lang-btn active" onclick="setLang('en-US')">🇺🇸 EN</button>
       <button class="lang-btn" onclick="setLang('es-ES')">🇪🇸 ES</button>
       <button class="lang-btn" onclick="setLang('fr-FR')">🇫🇷 FR</button>
-      <button class="lang-btn" onclick="setLang('hi-IN')">🇮🇳 HI</button>
-      <button class="lang-btn" onclick="setLang('ar-SA')">🇸🇦 AR</button>
+      <button class="lang-btn" onclick="setLang('hi-IN')">🇮🇳 हिंदी</button>
     </div>
 
     <span class="icon">💊</span>
@@ -321,27 +320,6 @@ const LANGS = {
     errConnect: 'माफ़ करें, अभी कनेक्ट नहीं हो सका। कृपया पुनः प्रयास करें।',
     heard: 'आपने कहा: ',
   },
-  'ar-SA': {
-    welcome: 'مرحباً بك في HealthGuard', selectSub: 'الرجاء اختيار اسمك للبدء.',
-    selectPlaceholder: '— اختر اسمك —',  continue: 'متابعة', refresh: '↻ تحديث القائمة',
-    pinTitle: 'أدخل رمز PIN',            pinSub: 'الرجاء إدخال رمز PIN المكون من 4 أرقام.',
-    pinBack: '→ رجوع',                   pinWrong: 'رمز PIN غير صحيح. يرجى المحاولة مرة أخرى.',
-    greeting: 'مرحباً، كيف حالك اليوم؟',
-    greetingSub: 'أنا مساعدك في HealthGuard. أنا هنا لمساعدتك على فهم حالتك الصحية.',
-    readings: '❤️ قراءاتك الحالية',      hr: 'معدل ضربات القلب', bp: 'ضغط الدم',
-    spo2: 'مستوى الأكسجين',             temp: 'درجة الحرارة',
-    tapToAsk: 'اضغط لطرح سؤال',         listening: 'أستمع... اضغط للإيقاف',
-    thinking: 'أفكر...',                change: 'تغيير',
-    quickQ: 'أسئلة سريعة',              tryAgain: 'حاول مرة أخرى',
-    q1: 'كيف حالي اليوم؟',              q2: 'هل معدل ضربات قلبي طبيعي؟',
-    q3: 'ماذا يعني ضغط دمي؟',           q4: 'هل يجب أن أقلق؟',
-    errNoSpeech: 'لم أسمعك. الرجاء التحدث بصوت أعلى والمحاولة مرة أخرى.',
-    errMic: 'تم رفض الوصول إلى الميكروفون. يرجى السماح بالوصول في متصفحك.',
-    errNetwork: 'مشكلة في الاتصال. تحقق من الإنترنت وحاول مرة أخرى.',
-    errGeneric: 'عذراً، لم أفهم. يرجى المحاولة مرة أخرى.',
-    errConnect: 'عذراً، لم أتمكن من الاتصال الآن. يرجى المحاولة مرة أخرى.',
-    heard: 'قلت: ',
-  },
 };
 
 // Translation helper
@@ -349,8 +327,6 @@ function T(key) { return (LANGS[selectedLang] || LANGS['en-US'])[key] || key; }
 
 // Apply all translated strings to the UI
 function applyLang() {
-  const isRTL = selectedLang === 'ar-SA';
-  document.getElementById('htmlRoot').setAttribute('dir', isRTL ? 'rtl' : 'ltr');
 
   const map = {
     'txt-welcome': 'welcome', 'txt-selectSub': 'selectSub',
@@ -387,6 +363,14 @@ function applyLang() {
 const ELEVENLABS_API_KEY  = "sk_2facad0c946996e835e3fa3821f60db6d938a8408755a8d9";
 const ELEVENLABS_VOICE_ID = "21m00Tcm4TlvDq8ikWAM";
 
+function speakBrowserTTS(text) {
+  window.speechSynthesis.cancel(); // clear any queued speech
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 0.9;
+  utterance.lang = selectedLang;
+  window.speechSynthesis.speak(utterance);
+}
+
 async function speakWithElevenLabs(text) {
   try {
     const res = await fetch(
@@ -400,30 +384,23 @@ async function speakWithElevenLabs(text) {
         }),
       }
     );
-    if (!res.ok) throw new Error("ElevenLabs API error");
+    if (!res.ok) throw new Error(`ElevenLabs error ${res.status}`);
     const blob = await res.blob();
-    const audioCtx = new AudioContext();
-    const audioBuffer = await audioCtx.decodeAudioData(await blob.arrayBuffer());
-    const source = audioCtx.createBufferSource();
-    source.buffer = audioBuffer;
-    const gainNode = audioCtx.createGain();
-    gainNode.gain.value = 3.0;
-    source.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    source.start(0);
+    const url  = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.volume = 1.0;
+    audio.onended = () => URL.revokeObjectURL(url);
+    await audio.play();
   } catch (e) {
-    console.warn("ElevenLabs failed, falling back to browser TTS", e);
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
-    utterance.lang = selectedLang;
-    window.speechSynthesis.speak(utterance);
+    console.warn("ElevenLabs failed, falling back to browser TTS:", e);
+    speakBrowserTTS(text);
   }
 }
 
 // ────────────────────────────────────────────
 // State
 // ────────────────────────────────────────────
-let selectedLang     = 'en-US';
+let selectedLang     = localStorage.getItem('hg_lang') || 'en-US';
 let MY_PATIENT_ID    = null;
 let myVitals         = null;
 let isListening      = false;
@@ -445,6 +422,7 @@ function patientAuthHeaders() {
 // ────────────────────────────────────────────
 function setLang(lang) {
   selectedLang = lang;
+  localStorage.setItem('hg_lang', lang);
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
   const btn = [...document.querySelectorAll('.lang-btn')].find(b => b.onclick.toString().includes(`'${lang}'`));
   if (btn) btn.classList.add('active');
@@ -830,7 +808,7 @@ function resetVoiceBtn() {
 // Init
 // ────────────────────────────────────────────
 window.addEventListener("DOMContentLoaded", () => {
-  applyLang();
+  setLang(selectedLang);  // restores persisted language + highlights the correct button
   loadPatientOptions();
 });
 </script>
